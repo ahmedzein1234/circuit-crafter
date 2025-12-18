@@ -9,7 +9,7 @@ import type {
   OscilloscopeData,
   LEDColor,
 } from '@circuit-crafter/shared';
-import { generateId, snapToGrid, GRID_SIZE } from '@circuit-crafter/shared';
+import { generateId, snapToGrid, GRID_SIZE, COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
 import { CircuitSolver, createComponent, createLED, createBattery } from '@circuit-crafter/circuit-engine';
 
 // Variant properties for component customization
@@ -242,9 +242,14 @@ export const useCircuitStore = create<CircuitState>()(
 
             const newRotation = (c.rotation + 90) % 360;
 
-            // Rotate terminal positions around component center
-            const centerX = c.position.x + 30; // Approximate center
-            const centerY = c.position.y + 20;
+            // Get component dimensions based on type
+            const dimensions = COMPONENT_DEFAULTS[c.type as keyof typeof COMPONENT_DEFAULTS];
+            const width = dimensions?.width ?? 60;
+            const height = dimensions?.height ?? 40;
+
+            // Calculate actual center based on component dimensions
+            const centerX = c.position.x + width / 2;
+            const centerY = c.position.y + height / 2;
 
             const updatedTerminals = c.terminals.map((t) => {
               const dx = t.position.x - centerX;

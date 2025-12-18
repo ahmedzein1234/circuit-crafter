@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
-import { GRID_SIZE } from '@circuit-crafter/shared';
+import { GRID_SIZE, COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
 import { GridLayer } from './GridLayer';
 import { ComponentRenderer } from './ComponentRenderer';
 import { WireRenderer } from './WireRenderer';
@@ -256,12 +256,14 @@ export function CircuitCanvas() {
     // Check each component to see if the point is within its bounds
     for (const component of components) {
       const { x, y } = component.position;
-      // Use approximate component bounds (most components are about 60x40)
-      const width = 70;
-      const height = 50;
+      // Get actual component dimensions based on type
+      const dimensions = COMPONENT_DEFAULTS[component.type as keyof typeof COMPONENT_DEFAULTS];
+      const width = dimensions?.width ?? 60;
+      const height = dimensions?.height ?? 40;
+      const padding = 10; // Extra padding for easier click detection
 
-      if (canvasX >= x - 10 && canvasX <= x + width + 10 &&
-          canvasY >= y - 10 && canvasY <= y + height + 10) {
+      if (canvasX >= x - padding && canvasX <= x + width + padding &&
+          canvasY >= y - padding && canvasY <= y + height + padding) {
         return component.id;
       }
     }
