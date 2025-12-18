@@ -45,13 +45,25 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
     }
   };
 
-  const handleClick = (e: { cancelBubble: boolean }) => {
+  const handleClick = (e: { cancelBubble: boolean; evt?: Event }) => {
     e.cancelBubble = true;
+    // Stop the native event from triggering parent drag
+    if (e.evt) {
+      e.evt.stopPropagation();
+    }
 
     if (isDrawingWire && wireStartTerminal !== terminal.id) {
       finishWireDrawing(terminal.id);
     } else if (!isDrawingWire) {
       startWireDrawing(terminal.id);
+    }
+  };
+
+  // Prevent drag on mousedown/touchstart to allow clicking
+  const handleMouseDown = (e: { cancelBubble: boolean; evt?: Event }) => {
+    e.cancelBubble = true;
+    if (e.evt) {
+      e.evt.stopPropagation();
     }
   };
 
@@ -85,9 +97,18 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
       y={terminal.position.y}
       onClick={handleClick}
       onTap={handleClick}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleMouseDown}
       onMouseEnter={() => setHoveredTerminal(terminal.id)}
       onMouseLeave={() => setHoveredTerminal(null)}
     >
+      {/* Invisible hit area for easier clicking - larger touch target */}
+      <Circle
+        radius={baseRadius * 2.5}
+        fill="transparent"
+        stroke="transparent"
+      />
+
       {/* Outer ring for hover effect - enhanced glow */}
       {(isHovered || isStart) && (
         <>

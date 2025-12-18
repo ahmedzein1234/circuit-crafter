@@ -130,21 +130,9 @@ export function useTouchGestures(options: TouchGesturesOptions) {
         }
 
         touchStateRef.current.lastCenter = currentCenter;
-      } else if (touches.length === 1 && !touchStateRef.current.isPinching) {
-        // Single finger pan
-        if (touchStateRef.current.touches.length > 0 && onPan) {
-          const delta = {
-            x: touches[0].x - touchStateRef.current.touches[0].x,
-            y: touches[0].y - touchStateRef.current.touches[0].y,
-          };
-
-          // Only trigger pan if movement is significant
-          if (Math.abs(delta.x) > 2 || Math.abs(delta.y) > 2) {
-            touchStateRef.current.isPanning = true;
-            onPan(delta);
-          }
-        }
       }
+      // Note: Single-finger pan removed to allow Konva to handle terminal clicks/taps
+      // Canvas panning on single finger is handled by Stage's draggable property
 
       touchStateRef.current.touches = touches;
     },
