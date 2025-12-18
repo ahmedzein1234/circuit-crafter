@@ -275,3 +275,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   outline: 2px solid rgb(59, 130, 246);
   outline-offset: 2px;
 }
+
+/* Shimmer animation for XP bar */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Fade in animation class */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}

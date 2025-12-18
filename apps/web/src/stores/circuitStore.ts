@@ -7,9 +7,16 @@ import type {
   ComponentType,
   SimulationResult,
   OscilloscopeData,
+  LEDColor,
 } from '@circuit-crafter/shared';
 import { generateId, snapToGrid, GRID_SIZE } from '@circuit-crafter/shared';
-import { CircuitSolver, createComponent } from '@circuit-crafter/circuit-engine';
+import { CircuitSolver, createComponent, createLED, createBattery } from '@circuit-crafter/circuit-engine';
+
+// Variant properties for component customization
+interface ComponentVariant {
+  color?: LEDColor;
+  voltage?: number;
+}
 
 // History entry for undo/redo
 interface HistoryEntry {
@@ -48,7 +55,7 @@ interface CircuitState {
   showCurrentFlow: boolean;
 
   // Actions
-  addComponent: (type: ComponentType, position: Position) => void;
+  addComponent: (type: ComponentType, position: Position, variant?: ComponentVariant) => void;
   removeComponent: (id: string) => void;
   updateComponentPosition: (id: string, position: Position) => void;
   rotateComponent: (id: string) => void;
@@ -149,19 +156,42 @@ export const useCircuitStore = create<CircuitState>()(
       showCurrentFlow: true,
 
       // Component actions
-      addComponent: (type, position) => {
+      addComponent: (type, position, variant) => {
+        console.log('=== Store: addComponent called ===');
+        console.log('Type:', type);
+        console.log('Position:', position);
+        console.log('Variant:', variant);
+        console.log('Current component count:', get().components.length);
+
         const snappedPosition = {
           x: snapToGrid(position.x, GRID_SIZE),
           y: snapToGrid(position.y, GRID_SIZE),
         };
 
-        const component = createComponent(type, snappedPosition);
+        let component: CircuitComponent;
 
-        set((state) => ({
-          components: [...state.components, component],
-          selectedComponentId: component.id,
-        }));
+        // Handle variants for specific component types
+        if (type === 'led' && variant?.color) {
+          component = createLED(snappedPosition, 2, 0.02, variant.color);
+        } else if (type === 'battery' && variant?.voltage) {
+          component = createBattery(snappedPosition, variant.voltage);
+        } else {
+          component = createComponent(type, snappedPosition);
+        }
 
+        console.log('Created component:', component.id, component.type);
+
+        set((state) => {
+          console.log('State before update:', state.components.length);
+          const newComponents = [...state.components, component];
+          console.log('State after update:', newComponents.length);
+          return {
+            components: newComponents,
+            selectedComponentId: component.id,
+          };
+        });
+
+        console.log('After set, component count:', get().components.length);
         pushHistory();
       },
 
@@ -300,11 +330,14 @@ export const useCircuitStore = create<CircuitState>()(
 
       // Wire drawing
       startWireDrawing: (terminalId) => {
+        console.log('=== Store: startWireDrawing ===');
+        console.log('Terminal ID:', terminalId);
         set({
           isDrawingWire: true,
           wireStartTerminal: terminalId,
           wirePreviewEnd: null,
         });
+        console.log('After set, isDrawingWire:', get().isDrawingWire);
       },
 
       updateWirePreview: (position) => {
@@ -312,9 +345,13 @@ export const useCircuitStore = create<CircuitState>()(
       },
 
       finishWireDrawing: (terminalId) => {
+        console.log('=== Store: finishWireDrawing ===');
+        console.log('Terminal ID:', terminalId);
         const { wireStartTerminal, addWire } = get();
+        console.log('Wire start terminal:', wireStartTerminal);
 
         if (wireStartTerminal && wireStartTerminal !== terminalId) {
+          console.log('Creating wire from', wireStartTerminal, 'to', terminalId);
           addWire(wireStartTerminal, terminalId);
         }
 
@@ -323,6 +360,7 @@ export const useCircuitStore = create<CircuitState>()(
           wireStartTerminal: null,
           wirePreviewEnd: null,
         });
+        console.log('Wires after:', get().wires.length);
       },
 
       cancelWireDrawing: () => {

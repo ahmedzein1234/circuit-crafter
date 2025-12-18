@@ -13,10 +13,14 @@ import { BuzzerShape } from './shapes/BuzzerShape';
 import { MotorShape } from './shapes/MotorShape';
 import { PotentiometerShape } from './shapes/PotentiometerShape';
 import { FuseShape } from './shapes/FuseShape';
+import { SparkEffect } from './effects';
 import type { CircuitComponent } from '@circuit-crafter/shared';
 
 export function ComponentRenderer() {
   const { components, selectedComponentId, simulationResult } = useCircuitStore();
+
+  // Debug log
+  console.log('ComponentRenderer render, components:', components.length);
 
   const getComponentSimulation = (componentId: string) => {
     return simulationResult?.components.find((c) => c.componentId === componentId);
@@ -25,6 +29,7 @@ export function ComponentRenderer() {
   const renderComponent = (component: CircuitComponent) => {
     const isSelected = selectedComponentId === component.id;
     const simulation = getComponentSimulation(component.id);
+    const isOverloaded = simulation?.isOverloaded || simulation?.state === 'overloaded' || simulation?.state === 'blown';
 
     const commonProps = {
       key: component.id,
@@ -33,38 +38,75 @@ export function ComponentRenderer() {
       simulation,
     };
 
+    let componentShape: JSX.Element | null = null;
+
     switch (component.type) {
       case 'battery':
-        return <BatteryShape {...commonProps} />;
+        componentShape = <BatteryShape {...commonProps} />;
+        break;
       case 'resistor':
-        return <ResistorShape {...commonProps} />;
+        componentShape = <ResistorShape {...commonProps} />;
+        break;
       case 'led':
-        return <LEDShape {...commonProps} />;
+        componentShape = <LEDShape {...commonProps} />;
+        break;
       case 'switch':
-        return <SwitchShape {...commonProps} />;
+        componentShape = <SwitchShape {...commonProps} />;
+        break;
       case 'and_gate':
       case 'or_gate':
       case 'not_gate':
-        return <LogicGateShape {...commonProps} />;
+        componentShape = <LogicGateShape {...commonProps} />;
+        break;
       case 'ground':
-        return <GroundShape {...commonProps} />;
+        componentShape = <GroundShape {...commonProps} />;
+        break;
       case 'capacitor':
-        return <CapacitorShape {...commonProps} />;
+        componentShape = <CapacitorShape {...commonProps} />;
+        break;
       case 'diode':
-        return <DiodeShape {...commonProps} />;
+        componentShape = <DiodeShape {...commonProps} />;
+        break;
       case 'transistor':
-        return <TransistorShape {...commonProps} />;
+        componentShape = <TransistorShape {...commonProps} />;
+        break;
       case 'buzzer':
-        return <BuzzerShape {...commonProps} />;
+        componentShape = <BuzzerShape {...commonProps} />;
+        break;
       case 'motor':
-        return <MotorShape {...commonProps} />;
+        componentShape = <MotorShape {...commonProps} />;
+        break;
       case 'potentiometer':
-        return <PotentiometerShape {...commonProps} />;
+        componentShape = <PotentiometerShape {...commonProps} />;
+        break;
       case 'fuse':
-        return <FuseShape {...commonProps} />;
+        componentShape = <FuseShape {...commonProps} />;
+        break;
       default:
         return null;
     }
+
+    // Calculate intensity based on current vs max current
+    const getOverloadIntensity = () => {
+      if (!simulation?.current) return 0.5;
+      const maxCurrent = (component.properties as { maxCurrent?: number }).maxCurrent || 0.05;
+      const ratio = Math.abs(simulation.current) / maxCurrent;
+      return Math.min(Math.max((ratio - 1) * 0.5, 0.3), 1);
+    };
+
+    return (
+      <Group key={component.id}>
+        {componentShape}
+        {isOverloaded && (
+          <SparkEffect
+            x={component.position.x}
+            y={component.position.y}
+            active={true}
+            intensity={getOverloadIntensity()}
+          />
+        )}
+      </Group>
+    );
   };
 
   return <Group>{components.map(renderComponent)}</Group>;

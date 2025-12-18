@@ -1,5 +1,6 @@
-import { Circle, Group } from 'react-konva';
+import { Circle, Group, Text, Rect } from 'react-konva';
 import { useCircuitStore } from '../stores/circuitStore';
+import { useSoundEffects } from '../hooks/useSoundEffects';
 import type { Terminal } from '@circuit-crafter/shared';
 
 interface TerminalDotProps {
@@ -17,6 +18,7 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
     setHoveredTerminal,
     wires,
   } = useCircuitStore();
+  const { play } = useSoundEffects();
 
   const isStart = wireStartTerminal === terminal.id;
   const isHovered = hoveredTerminalId === terminal.id;
@@ -45,22 +47,52 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
     }
   };
 
+  // Handle click - main interaction for wiring
   const handleClick = (e: { cancelBubble: boolean; evt?: Event }) => {
+    console.log('=== Terminal Click ===');
+    console.log('Terminal ID:', terminal.id);
+    console.log('Terminal Type:', terminal.type);
+    console.log('Is Drawing Wire:', isDrawingWire);
+    console.log('Wire Start Terminal:', wireStartTerminal);
+
     e.cancelBubble = true;
-    // Stop the native event from triggering parent drag
     if (e.evt) {
       e.evt.stopPropagation();
     }
 
-    if (isDrawingWire && wireStartTerminal !== terminal.id) {
-      finishWireDrawing(terminal.id);
-    } else if (!isDrawingWire) {
+    if (isDrawingWire) {
+      // If drawing wire and this is a different terminal, complete the connection
+      if (wireStartTerminal !== terminal.id) {
+        console.log('Completing wire from', wireStartTerminal, 'to', terminal.id);
+        finishWireDrawing(terminal.id);
+        play('connect');
+      } else {
+        console.log('Same terminal clicked, ignoring');
+      }
+      // If same terminal, do nothing (user can click elsewhere to cancel)
+    } else {
+      // Start drawing a new wire from this terminal
+      console.log('Starting wire from terminal:', terminal.id);
       startWireDrawing(terminal.id);
+      play('click');
     }
   };
 
-  // Prevent drag on mousedown/touchstart to allow clicking
+  // Handle mousedown - prevent parent drag when clicking terminals
   const handleMouseDown = (e: { cancelBubble: boolean; evt?: Event }) => {
+    e.cancelBubble = true;
+    if (e.evt) {
+      e.evt.stopPropagation();
+    }
+  };
+
+  // When mouse enters terminal while drawing wire
+  const handleMouseEnter = () => {
+    setHoveredTerminal(terminal.id);
+  };
+
+  // Handle mouseup - no special handling needed, click handles it
+  const handleMouseUp = (e: { cancelBubble: boolean; evt?: Event }) => {
     e.cancelBubble = true;
     if (e.evt) {
       e.evt.stopPropagation();
@@ -71,25 +103,40 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
   const baseRadius = 7;
   const radius = isHovered ? baseRadius * 1.5 : isConnected ? baseRadius * 1.2 : baseRadius;
 
-  // Format terminal type for display (for future use in tooltips)
-  // const getTerminalLabel = () => {
-  //   switch (terminal.type) {
-  //     case 'positive':
-  //       return 'Positive (+)';
-  //     case 'negative':
-  //       return 'Negative (-)';
-  //     case 'input':
-  //       return 'Input';
-  //     case 'input_a':
-  //       return 'Input A';
-  //     case 'input_b':
-  //       return 'Input B';
-  //     case 'output':
-  //       return 'Output';
-  //     default:
-  //       return terminal.type;
-  //   }
-  // };
+  // Format terminal type for display in tooltips
+  const getTerminalLabel = () => {
+    switch (terminal.type) {
+      case 'positive':
+        return 'Positive (+)';
+      case 'negative':
+        return 'Negative (-)';
+      case 'input':
+        return 'Input';
+      case 'input_a':
+        return 'Input A';
+      case 'input_b':
+        return 'Input B';
+      case 'output':
+        return 'Output';
+      default:
+        return terminal.type;
+    }
+  };
+
+  // Get hint text for what user can do
+  const getActionHint = () => {
+    if (isDrawingWire) {
+      if (wireStartTerminal === terminal.id) {
+        return 'Click elsewhere to cancel';
+      }
+      return 'Click to connect wire';
+    }
+    return 'Click to start wire';
+  };
+
+  const tooltipText = `${getTerminalLabel()}\n${getActionHint()}`;
+  const tooltipWidth = 110;
+  const tooltipHeight = 36;
 
   return (
     <Group
@@ -99,7 +146,9 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
       onTap={handleClick}
       onMouseDown={handleMouseDown}
       onTouchStart={handleMouseDown}
-      onMouseEnter={() => setHoveredTerminal(terminal.id)}
+      onMouseUp={handleMouseUp}
+      onTouchEnd={handleMouseUp}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHoveredTerminal(null)}
     >
       {/* Invisible hit area for easier clicking - larger touch target */}
@@ -143,6 +192,32 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
       {/* Connection indicator */}
       {isConnected && (
         <Circle radius={2.5} fill="#ffffff" />
+      )}
+
+      {/* Tooltip on hover */}
+      {isHovered && (
+        <Group x={15} y={-tooltipHeight / 2}>
+          {/* Tooltip background */}
+          <Rect
+            width={tooltipWidth}
+            height={tooltipHeight}
+            fill="#1f2937"
+            cornerRadius={4}
+            shadowColor="black"
+            shadowBlur={8}
+            shadowOpacity={0.3}
+          />
+          {/* Tooltip text */}
+          <Text
+            x={8}
+            y={6}
+            text={tooltipText}
+            fontSize={10}
+            fontFamily="system-ui, sans-serif"
+            fill="#ffffff"
+            lineHeight={1.3}
+          />
+        </Group>
       )}
     </Group>
   );

@@ -1,6 +1,8 @@
 import { useCircuitStore } from '../stores/circuitStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useTutorialStore } from '../stores/tutorialStore';
+import { useSandboxStore } from '../stores/sandboxStore';
+import { useSocialStore } from '../stores/socialStore';
 
 interface ToolbarProps {
   onHelpClick: () => void;
@@ -22,6 +24,8 @@ export function Toolbar({ onHelpClick }: ToolbarProps) {
 
   const { theme, toggleTheme } = useThemeStore();
   const { openLevelSelector, getTotalProgress, isInTutorialMode } = useTutorialStore();
+  const { isSandboxMode, toggleSandboxMode } = useSandboxStore();
+  const { openShareModal, openLeaderboard, openProfileModal } = useSocialStore();
   const tutorialProgress = getTotalProgress();
 
   const handleDelete = () => {
@@ -149,6 +153,33 @@ export function Toolbar({ onHelpClick }: ToolbarProps) {
         </svg>
       </button>
 
+      {/* Sandbox Mode toggle */}
+      {!isInTutorialMode && (
+        <button
+          onClick={toggleSandboxMode}
+          className={`flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 ${
+            isSandboxMode
+              ? 'bg-gradient-to-r from-amber-500/90 to-orange-500/90 hover:from-amber-500 hover:to-orange-500 text-white ring-amber-400'
+              : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white ring-blue-500'
+          }`}
+          title={isSandboxMode ? 'Exit Sandbox Mode' : 'Enter Sandbox Mode - Free experimentation with all components'}
+          aria-label={isSandboxMode ? 'Exit sandbox mode' : 'Enter sandbox mode'}
+          aria-pressed={isSandboxMode}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+            />
+          </svg>
+          <span className="hidden sm:inline">
+            {isSandboxMode ? 'Sandbox ON' : 'Sandbox'}
+          </span>
+        </button>
+      )}
+
       {/* Tutorial button */}
       {!isInTutorialMode && (
         <button
@@ -173,6 +204,49 @@ export function Toolbar({ onHelpClick }: ToolbarProps) {
           )}
         </button>
       )}
+
+      {/* Social features - Share, Leaderboard, Profile */}
+      <div className="hidden md:flex items-center gap-1 ml-2 pl-2 border-l border-gray-700">
+        {/* Share button */}
+        <button
+          onClick={openShareModal}
+          disabled={components.length === 0}
+          className="flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-lg bg-green-600/80 hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+          title="Share your circuit"
+          aria-label="Share circuit"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+          <span className="hidden lg:inline">Share</span>
+        </button>
+
+        {/* Leaderboard button */}
+        <button
+          onClick={openLeaderboard}
+          className="flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-lg bg-yellow-600/80 hover:bg-yellow-600 text-white text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          title="View leaderboard"
+          aria-label="View leaderboard"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+          </svg>
+          <span className="hidden lg:inline">Ranks</span>
+        </button>
+
+        {/* Profile button */}
+        <button
+          onClick={() => openProfileModal()}
+          className="flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-lg bg-gray-700/80 hover:bg-gray-600 text-white text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          title="View your profile"
+          aria-label="View profile"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span className="hidden lg:inline">Profile</span>
+        </button>
+      </div>
 
       {/* Stats - Hidden on mobile */}
       <div className="hidden md:flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500 light:text-gray-500 ml-2" role="status" aria-live="polite">

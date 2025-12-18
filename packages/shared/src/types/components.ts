@@ -46,6 +46,8 @@ export interface Terminal {
   connectedTo: string[];
 }
 
+export type LEDColor = 'red' | 'green' | 'blue' | 'yellow' | 'white';
+
 export interface ComponentProperties {
   voltage?: number;
   resistance?: number;
@@ -68,6 +70,8 @@ export interface ComponentProperties {
   isBlown?: boolean;
   // Buzzer properties
   frequency?: number;
+  // LED properties
+  color?: LEDColor;
 }
 
 export interface BaseComponent {
@@ -99,6 +103,7 @@ export interface LEDComponent extends BaseComponent {
   properties: {
     forwardVoltage: number;
     maxCurrent: number;
+    color: LEDColor;
   };
 }
 

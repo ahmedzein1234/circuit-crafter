@@ -1,10 +1,19 @@
 import { Group, Rect, Line, Circle, RegularPolygon } from 'react-konva';
 import { TerminalDot } from '../TerminalDot';
 import { useCircuitStore } from '../../stores/circuitStore';
-import type { CircuitComponent, ComponentSimulationResult } from '@circuit-crafter/shared';
+import type { CircuitComponent, ComponentSimulationResult, LEDColor } from '@circuit-crafter/shared';
 import { COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
 import { useEffect, useRef } from 'react';
 import type Konva from 'konva';
+
+// LED color map
+const LED_COLORS: Record<LEDColor, { base: string; glow: string }> = {
+  red: { base: '#ef4444', glow: '#ff8888' },
+  green: { base: '#22c55e', glow: '#86efac' },
+  blue: { base: '#3b82f6', glow: '#93c5fd' },
+  yellow: { base: '#eab308', glow: '#fde047' },
+  white: { base: '#f8fafc', glow: '#ffffff' },
+};
 
 interface LEDShapeProps {
   component: CircuitComponent;
@@ -28,9 +37,11 @@ export function LEDShape({ component, isSelected, simulation }: LEDShapeProps) {
   const isOverloaded = simulation?.isOverloaded ?? false;
   const isLit = brightness > 0.1;
 
-  // LED color (default red)
-  const ledColor = isOverloaded ? '#ef4444' : '#ef4444';
-  const glowColor = isOverloaded ? '#ff6b6b' : '#ff8888';
+  // Get LED color from properties (default red)
+  const colorKey = ('color' in component.properties && component.properties.color as LEDColor) || 'red';
+  const colors = LED_COLORS[colorKey];
+  const ledColor = isOverloaded ? '#ef4444' : colors.base;
+  const glowColor = isOverloaded ? '#ff6b6b' : colors.glow;
 
   // Pulsing glow animation
   useEffect(() => {

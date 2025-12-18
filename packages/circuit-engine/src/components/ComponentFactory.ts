@@ -8,6 +8,7 @@ import type {
   BatteryComponent,
   ResistorComponent,
   LEDComponent,
+  LEDColor,
   SwitchComponent,
   WireComponent,
   LogicGateComponent,
@@ -74,7 +75,8 @@ export function createResistor(position: Position, resistance: number = 1000): R
 export function createLED(
   position: Position,
   forwardVoltage: number = 2,
-  maxCurrent: number = 0.02
+  maxCurrent: number = 0.02,
+  color: LEDColor = 'red'
 ): LEDComponent {
   const defaults = COMPONENT_DEFAULTS.led;
   return {
@@ -86,7 +88,7 @@ export function createLED(
       createTerminal('positive', defaults.width / 2, 0, position),
       createTerminal('negative', defaults.width / 2, defaults.height, position),
     ],
-    properties: { forwardVoltage, maxCurrent },
+    properties: { forwardVoltage, maxCurrent, color },
   };
 }
 

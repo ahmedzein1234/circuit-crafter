@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { ComponentType } from '@circuit-crafter/shared';
+import type { ComponentType, LEDColor } from '@circuit-crafter/shared';
 import { COMPONENT_CATEGORIES } from '@circuit-crafter/shared';
 import { ComponentInfoPanel } from './ComponentInfoPanel';
 
@@ -8,19 +8,54 @@ interface ComponentInfo {
   name: string;
   description: string;
   icon: JSX.Element;
+  // Optional variant properties
+  variant?: {
+    color?: LEDColor;
+    voltage?: number;
+  };
 }
 
 const allComponents: ComponentInfo[] = [
   {
     type: 'battery',
-    name: 'Battery',
-    description: '9V power source',
+    name: '1.5V Battery',
+    description: 'AA cell battery',
+    variant: { voltage: 1.5 },
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
+        <rect x="6" y="6" width="10" height="14" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />
+        <rect x="9" y="4" width="4" height="2" fill="currentColor" />
+        <rect x="8" y="9" width="6" height="3" fill="#22c55e" />
+        <text x="11" y="17" textAnchor="middle" fontSize="5" fill="currentColor" stroke="none">1.5V</text>
+      </svg>
+    ),
+  },
+  {
+    type: 'battery',
+    name: '9V Battery',
+    description: 'Standard 9V battery',
+    variant: { voltage: 9 },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
         <rect x="3" y="7" width="15" height="10" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />
         <rect x="18" y="10" width="3" height="4" fill="currentColor" />
         <rect x="6" y="9" width="3" height="6" fill="#ef4444" />
         <rect x="11" y="9" width="3" height="6" fill="#ef4444" />
+      </svg>
+    ),
+  },
+  {
+    type: 'battery',
+    name: '12V Battery',
+    description: 'High voltage battery',
+    variant: { voltage: 12 },
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
+        <rect x="2" y="8" width="18" height="10" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />
+        <rect x="20" y="11" width="3" height="4" fill="currentColor" />
+        <rect x="4" y="10" width="4" height="6" fill="#3b82f6" />
+        <rect x="9" y="10" width="4" height="6" fill="#3b82f6" />
+        <rect x="14" y="10" width="4" height="6" fill="#3b82f6" />
       </svg>
     ),
   },
@@ -115,11 +150,54 @@ const allComponents: ComponentInfo[] = [
   },
   {
     type: 'led',
-    name: 'LED',
-    description: 'Light emitting diode',
+    name: 'Red LED',
+    description: 'Red light emitting diode',
+    variant: { color: 'red' },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <polygon points="12,4 4,14 20,14" fill="#ef4444" stroke="#ef4444" />
+        <line x1="4" y1="16" x2="20" y2="16" />
+        <line x1="16" y1="8" x2="20" y2="4" />
+        <line x1="18" y1="10" x2="22" y2="8" />
+      </svg>
+    ),
+  },
+  {
+    type: 'led',
+    name: 'Green LED',
+    description: 'Green light emitting diode',
+    variant: { color: 'green' },
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
+        <polygon points="12,4 4,14 20,14" fill="#22c55e" stroke="#22c55e" />
+        <line x1="4" y1="16" x2="20" y2="16" />
+        <line x1="16" y1="8" x2="20" y2="4" />
+        <line x1="18" y1="10" x2="22" y2="8" />
+      </svg>
+    ),
+  },
+  {
+    type: 'led',
+    name: 'Blue LED',
+    description: 'Blue light emitting diode',
+    variant: { color: 'blue' },
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
+        <polygon points="12,4 4,14 20,14" fill="#3b82f6" stroke="#3b82f6" />
+        <line x1="4" y1="16" x2="20" y2="16" />
+        <line x1="16" y1="8" x2="20" y2="4" />
+        <line x1="18" y1="10" x2="22" y2="8" />
+      </svg>
+    ),
+  },
+  {
+    type: 'led',
+    name: 'Yellow LED',
+    description: 'Yellow light emitting diode',
+    variant: { color: 'yellow' },
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
+        <polygon points="12,4 4,14 20,14" fill="#eab308" stroke="#eab308" />
         <line x1="4" y1="16" x2="20" y2="16" />
         <line x1="16" y1="8" x2="20" y2="4" />
         <line x1="18" y1="10" x2="22" y2="8" />
@@ -219,9 +297,17 @@ export function ComponentPalette() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(categoryOrder));
 
   const handleDragStart = useCallback(
-    (e: React.DragEvent, componentType: ComponentType) => {
-      e.dataTransfer.setData('component-type', componentType);
+    (e: React.DragEvent, component: ComponentInfo) => {
+      console.log('Drag start:', component.type, component.variant);
+      e.dataTransfer.setData('component-type', component.type);
+      if (component.variant) {
+        e.dataTransfer.setData('component-variant', JSON.stringify(component.variant));
+      }
       e.dataTransfer.effectAllowed = 'copy';
+      // Set a drag image
+      if (e.currentTarget instanceof HTMLElement) {
+        e.dataTransfer.setDragImage(e.currentTarget, 30, 30);
+      }
     },
     []
   );
@@ -299,9 +385,9 @@ export function ComponentPalette() {
               </button>
               {isExpanded && (
                 <div className="space-y-2 md:space-y-1">
-                  {components.map((component) => (
+                  {components.map((component, index) => (
                     <ComponentItem
-                      key={component.type}
+                      key={`${component.type}-${component.variant?.color || index}`}
                       component={component}
                       onDragStart={handleDragStart}
                       onInfoClick={() => setSelectedInfoType(component.type)}
@@ -342,7 +428,7 @@ export function ComponentPalette() {
 
 interface ComponentItemProps {
   component: ComponentInfo;
-  onDragStart: (e: React.DragEvent, type: ComponentType) => void;
+  onDragStart: (e: React.DragEvent, component: ComponentInfo) => void;
   onInfoClick: () => void;
 }
 
@@ -351,7 +437,7 @@ function ComponentItem({ component, onDragStart, onInfoClick }: ComponentItemPro
     <div
       className="component-item flex items-center gap-3 text-gray-300 dark:text-gray-300 light:text-gray-700 group p-2 md:p-0 rounded-lg md:rounded-none hover:bg-gray-800/50 md:hover:bg-transparent transition-colors"
       draggable
-      onDragStart={(e) => onDragStart(e, component.type)}
+      onDragStart={(e) => onDragStart(e, component)}
     >
       <div className="w-12 h-12 md:w-10 md:h-10 min-w-touch-target md:min-w-0 flex items-center justify-center bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded-lg flex-shrink-0">
         {component.icon}
