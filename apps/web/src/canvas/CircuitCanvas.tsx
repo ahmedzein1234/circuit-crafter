@@ -7,7 +7,8 @@ import { WireRenderer } from './WireRenderer';
 import { WirePreview, ConnectionValidity } from './WirePreview';
 import { useCircuitStore } from '../stores/circuitStore';
 import { useTouchGestures } from '../hooks/useTouchGestures';
-import { useSoundEffects } from '../hooks/useSoundEffects';
+// Sound effects available for future features
+// import { useSoundEffects } from '../hooks/useSoundEffects';
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu';
 
 interface ContextMenuState {
@@ -22,7 +23,6 @@ export function CircuitCanvas() {
   const stageRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const lastPinchScaleRef = useRef(1);
-  const { play } = useSoundEffects();
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
   const {
@@ -509,7 +509,6 @@ export function CircuitCanvas() {
   // Generate context menu items based on what was right-clicked
   function getContextMenuItems(): ContextMenuItem[] {
     if (contextMenu?.componentId) {
-      const component = components.find(c => c.id === contextMenu.componentId);
       return [
         {
           label: 'Rotate',

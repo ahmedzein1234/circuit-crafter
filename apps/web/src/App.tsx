@@ -42,15 +42,15 @@ function App() {
     initializeDailyChallenge();
   }, []);
 
-  // Start onboarding for first-time users (temporarily disabled for debugging)
-  // useEffect(() => {
-  //   if (!isOnboardingComplete && !isOnboardingActive) {
-  //     const timer = setTimeout(() => {
-  //       startOnboarding();
-  //     }, 500); // Small delay to let the UI render first
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [isOnboardingComplete, isOnboardingActive, startOnboarding]);
+  // Start onboarding for first-time users
+  useEffect(() => {
+    if (!isOnboardingComplete && !isOnboardingActive) {
+      const timer = setTimeout(() => {
+        startOnboarding();
+      }, 500); // Small delay to let the UI render first
+      return () => clearTimeout(timer);
+    }
+  }, [isOnboardingComplete, isOnboardingActive, startOnboarding]);
 
   // Handler for help button to show keyboard shortcuts
   const handleHelpClick = () => {
@@ -222,17 +222,19 @@ function App() {
       {/* Keyboard Shortcuts Panel */}
       <KeyboardShortcutsPanel isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
 
-      {/* Note: Other overlays temporarily disabled for debugging */}
-      {/* <OnboardingFlow /> */}
-      {/* <DailyRewardModalContainer /> */}
-      {/* <TutorialLevelSelector /> */}
-      {/* <TutorialConceptModal /> */}
-      {/* <TutorialCompletionModal /> */}
-      {/* {isInTutorialMode && <TutorialModeOverlay />} */}
-      {/* <AchievementNotification /> */}
-      {/* <ShareCircuitModal /> */}
-      {/* <LeaderboardPanel /> */}
-      {/* <UserProfileCard /> */}
+      {/* Onboarding & Tutorial Overlays */}
+      <OnboardingFlow />
+      <DailyRewardModalContainer />
+      <TutorialLevelSelector />
+      <TutorialConceptModal />
+      <TutorialCompletionModal />
+      {isInTutorialMode && <TutorialModeOverlay />}
+
+      {/* Gamification & Social */}
+      <AchievementNotification />
+      <ShareCircuitModal />
+      <LeaderboardPanel />
+      <UserProfileCard />
     </div>
   );
 }
