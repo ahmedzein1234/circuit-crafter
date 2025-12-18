@@ -28,7 +28,7 @@ const simulateSchema = z.object({
 
 // Run simulation
 simulationRouter.post('/', validateBody(simulateSchema), async (c) => {
-  const { components, wires } = c.get('validatedBody');
+  const { components, wires } = c.get('validatedBody') as z.infer<typeof simulateSchema>;
 
   try {
     // Note: In production, we would import the CircuitSolver from circuit-engine
@@ -79,13 +79,16 @@ simulationRouter.post('/', validateBody(simulateSchema), async (c) => {
   }
 });
 
-// Validate circuit against challenge
-simulationRouter.post('/validate', validateBody(z.object({
+// Schema for validate endpoint
+const validateSchema = z.object({
   challengeId: z.string(),
   components: z.array(z.any()),
   wires: z.array(z.any()),
-})), async (c) => {
-  const { challengeId, components, wires } = c.get('validatedBody');
+});
+
+// Validate circuit against challenge
+simulationRouter.post('/validate', validateBody(validateSchema), async (c) => {
+  const { challengeId, components, wires } = c.get('validatedBody') as z.infer<typeof validateSchema>;
 
   try {
     // Get challenge

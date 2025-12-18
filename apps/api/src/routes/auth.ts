@@ -19,7 +19,7 @@ const loginSchema = z.object({
 
 // Register new user
 authRouter.post('/register', validateBody(registerSchema), async (c) => {
-  const { email, username, password } = c.get('validatedBody');
+  const { email, username, password } = c.get('validatedBody') as z.infer<typeof registerSchema>;
 
   try {
     // Check if user exists
@@ -98,7 +98,7 @@ authRouter.post('/register', validateBody(registerSchema), async (c) => {
 
 // Login
 authRouter.post('/login', validateBody(loginSchema), async (c) => {
-  const { email, password } = c.get('validatedBody');
+  const { email, password } = c.get('validatedBody') as z.infer<typeof loginSchema>;
 
   try {
     // Find user

@@ -145,9 +145,13 @@ usersRouter.get('/:username/achievements', async (c) => {
       .bind(user.id)
       .all();
 
+    // Type the results for D1 query
+    type AchievementRow = { achievement_type: string; earned_at: string; metadata_json: string | null };
+    const results = achievements.results as AchievementRow[];
+
     return c.json({
       success: true,
-      data: achievements.results.map((a: { achievement_type: string; earned_at: string; metadata_json: string | null }) => ({
+      data: results.map((a) => ({
         type: a.achievement_type,
         earnedAt: a.earned_at,
         metadata: a.metadata_json ? JSON.parse(a.metadata_json) : null,

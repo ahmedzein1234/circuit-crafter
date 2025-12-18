@@ -194,7 +194,7 @@ challengesRouter.get('/:id', optionalAuthMiddleware, async (c) => {
 // Create challenge
 challengesRouter.post('/', authMiddleware, validateBody(createChallengeSchema), async (c) => {
   const user = c.get('user');
-  const data = c.get('validatedBody');
+  const data = c.get('validatedBody') as z.infer<typeof createChallengeSchema>;
 
   try {
     const id = generateId();
@@ -245,7 +245,7 @@ challengesRouter.post(
   async (c) => {
     const challengeId = c.req.param('id');
     const user = c.get('user');
-    const { circuitBlueprint, solveTimeSeconds } = c.get('validatedBody');
+    const { circuitBlueprint, solveTimeSeconds } = c.get('validatedBody') as z.infer<typeof submitSolutionSchema>;
 
     try {
       // Get challenge details

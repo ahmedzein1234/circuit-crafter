@@ -43,7 +43,7 @@ const listQuerySchema = z.object({
 
 // List public circuits
 circuitsRouter.get('/', validateQuery(listQuerySchema), async (c) => {
-  const { page, limit, sortBy, sortOrder } = c.get('validatedQuery');
+  const { page, limit, sortBy, sortOrder } = c.get('validatedQuery') as z.infer<typeof listQuerySchema>;
   const offset = (page - 1) * limit;
 
   try {
@@ -155,7 +155,7 @@ circuitsRouter.get('/:id', optionalAuthMiddleware, async (c) => {
 // Create circuit
 circuitsRouter.post('/', authMiddleware, validateBody(createCircuitSchema), async (c) => {
   const user = c.get('user');
-  const { name, description, blueprint, isPublic, isTemplate } = c.get('validatedBody');
+  const { name, description, blueprint, isPublic, isTemplate } = c.get('validatedBody') as z.infer<typeof createCircuitSchema>;
 
   try {
     const id = generateId();
@@ -202,7 +202,7 @@ circuitsRouter.post('/', authMiddleware, validateBody(createCircuitSchema), asyn
 circuitsRouter.put('/:id', authMiddleware, validateBody(updateCircuitSchema), async (c) => {
   const id = c.req.param('id');
   const user = c.get('user');
-  const updates = c.get('validatedBody');
+  const updates = c.get('validatedBody') as z.infer<typeof updateCircuitSchema>;
 
   try {
     // Check ownership
