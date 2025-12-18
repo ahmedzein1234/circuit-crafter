@@ -1,0 +1,37 @@
+name = "circuit-crafter-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ENVIRONMENT = "development"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "circuit-crafter-db"
+database_id = "e6ba5470-0d0b-47cc-bff2-c70a6b67275e"
+
+# R2 Storage
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "circuit-crafter-assets"
+
+# KV Cache
+[[kv_namespaces]]
+binding = "CACHE"
+id = "20a796aacf6f4b678e837335e0a0adf9"
+
+# Durable Objects for real-time
+[durable_objects]
+bindings = [
+  { name = "CIRCUIT_ROOM", class_name = "CircuitRoom" },
+  { name = "CHALLENGE_ROOM", class_name = "ChallengeRoom" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["CircuitRoom", "ChallengeRoom"]
+
+[dev]
+port = 8787
+local_protocol = "http"
