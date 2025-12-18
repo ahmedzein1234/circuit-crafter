@@ -4,7 +4,7 @@ import { validateBody } from '../middleware/validation';
 import type { Env } from '../types/env';
 import { generateId } from '@circuit-crafter/shared';
 
-const authRouter = new Hono<{ Bindings: Env }>();
+const authRouter = new Hono<Env>();
 
 const registerSchema = z.object({
   email: z.string().email(),

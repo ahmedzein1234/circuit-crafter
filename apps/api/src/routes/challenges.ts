@@ -5,7 +5,7 @@ import { validateBody } from '../middleware/validation';
 import type { Env } from '../types/env';
 import { generateId } from '@circuit-crafter/shared';
 
-const challengesRouter = new Hono<{ Bindings: Env }>();
+const challengesRouter = new Hono<Env>();
 
 const createChallengeSchema = z.object({
   title: z.string().min(1).max(100),

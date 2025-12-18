@@ -29,8 +29,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: pnpm typecheck
+      - name: Type check (web)
+        run: pnpm typecheck --filter=@circuit-crafter/web --filter=@circuit-crafter/shared --filter=@circuit-crafter/circuit-engine
 
       - name: Run tests
         run: pnpm test

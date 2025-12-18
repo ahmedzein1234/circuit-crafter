@@ -8,7 +8,7 @@ export interface AuthUser {
 }
 
 // Simple token verification (in production, use proper JWT)
-export async function authMiddleware(c: Context<{ Bindings: Env }>, next: Next) {
+export async function authMiddleware(c: Context<Env>, next: Next) {
   const authHeader = c.req.header('Authorization');
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -58,7 +58,7 @@ export async function authMiddleware(c: Context<{ Bindings: Env }>, next: Next) 
 
 // Optional auth - continues even if not authenticated
 export async function optionalAuthMiddleware(
-  c: Context<{ Bindings: Env }>,
+  c: Context<Env>,
   next: Next
 ) {
   const authHeader = c.req.header('Authorization');

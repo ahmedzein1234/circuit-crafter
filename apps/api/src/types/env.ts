@@ -1,4 +1,5 @@
-export interface Env {
+// Cloudflare Worker bindings
+export interface Bindings {
   // D1 Database
   DB: D1Database;
 
@@ -15,4 +16,29 @@ export interface Env {
   // Environment variables
   ENVIRONMENT: string;
   JWT_SECRET?: string;
+
+  // Index signature for Hono compatibility
+  [key: string]: unknown;
+}
+
+// User data from auth middleware
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+}
+
+// Hono context variables
+export interface Variables {
+  user: User;
+  validatedBody: unknown;
+  validatedQuery: unknown;
+  // Index signature for Hono compatibility
+  [key: string]: unknown;
+}
+
+// Hono app environment type
+export interface Env {
+  Bindings: Bindings;
+  Variables: Variables;
 }

@@ -5,7 +5,7 @@ import { validateBody, validateQuery } from '../middleware/validation';
 import type { Env } from '../types/env';
 import { generateId } from '@circuit-crafter/shared';
 
-const circuitsRouter = new Hono<{ Bindings: Env }>();
+const circuitsRouter = new Hono<Env>();
 
 const createCircuitSchema = z.object({
   name: z.string().min(1).max(100),

@@ -1,8 +1,9 @@
 import { Context, Next } from 'hono';
 import { z } from 'zod';
+import type { Env } from '../types/env';
 
 export function validateBody<T extends z.ZodType>(schema: T) {
-  return async (c: Context, next: Next) => {
+  return async (c: Context<Env>, next: Next) => {
     try {
       const body = await c.req.json();
       const result = schema.safeParse(body);
@@ -37,7 +38,7 @@ export function validateBody<T extends z.ZodType>(schema: T) {
 }
 
 export function validateQuery<T extends z.ZodType>(schema: T) {
-  return async (c: Context, next: Next) => {
+  return async (c: Context<Env>, next: Next) => {
     const query = c.req.query();
     const result = schema.safeParse(query);
 
@@ -61,7 +62,7 @@ export function validateQuery<T extends z.ZodType>(schema: T) {
 }
 
 export function validateParams<T extends z.ZodType>(schema: T) {
-  return async (c: Context, next: Next) => {
+  return async (c: Context<Env>, next: Next) => {
     const params = c.req.param();
     const result = schema.safeParse(params);
 

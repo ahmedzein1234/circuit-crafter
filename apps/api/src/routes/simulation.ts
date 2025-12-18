@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { validateBody } from '../middleware/validation';
 import type { Env } from '../types/env';
 
-const simulationRouter = new Hono<{ Bindings: Env }>();
+const simulationRouter = new Hono<Env>();
 
 const simulateSchema = z.object({
   components: z.array(

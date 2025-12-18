@@ -9,9 +9,19 @@ interface WebSocketSession {
   cursor?: { x: number; y: number };
 }
 
+interface CircuitComponent {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface CircuitWire {
+  id: string;
+  [key: string]: unknown;
+}
+
 interface CircuitState {
-  components: unknown[];
-  wires: unknown[];
+  components: CircuitComponent[];
+  wires: CircuitWire[];
   lastModified: string;
   version: number;
 }
@@ -144,7 +154,7 @@ export class CircuitRoom {
         break;
 
       case 'add_component':
-        this.circuitState.components.push(message.data);
+        this.circuitState.components.push(message.data as CircuitComponent);
         this.circuitState.version++;
         this.circuitState.lastModified = new Date().toISOString();
         this.broadcast({
@@ -158,7 +168,7 @@ export class CircuitRoom {
       case 'remove_component':
         const removeId = (message.data as { id: string }).id;
         this.circuitState.components = this.circuitState.components.filter(
-          (c: unknown) => (c as { id: string }).id !== removeId
+          (c) => c.id !== removeId
         );
         this.circuitState.version++;
         this.circuitState.lastModified = new Date().toISOString();
@@ -171,11 +181,11 @@ export class CircuitRoom {
         break;
 
       case 'update_component':
-        const updateData = message.data as { id: string; changes: unknown };
+        const updateData = message.data as { id: string; changes: Record<string, unknown> };
         this.circuitState.components = this.circuitState.components.map(
-          (c: unknown) =>
-            (c as { id: string }).id === updateData.id
-              ? { ...(c as object), ...updateData.changes }
+          (c) =>
+            c.id === updateData.id
+              ? { ...c, ...updateData.changes }
               : c
         );
         this.circuitState.version++;
@@ -189,7 +199,7 @@ export class CircuitRoom {
         break;
 
       case 'add_wire':
-        this.circuitState.wires.push(message.data);
+        this.circuitState.wires.push(message.data as CircuitWire);
         this.circuitState.version++;
         this.circuitState.lastModified = new Date().toISOString();
         this.broadcast({
@@ -203,7 +213,7 @@ export class CircuitRoom {
       case 'remove_wire':
         const wireId = (message.data as { id: string }).id;
         this.circuitState.wires = this.circuitState.wires.filter(
-          (w: unknown) => (w as { id: string }).id !== wireId
+          (w) => w.id !== wireId
         );
         this.circuitState.version++;
         this.circuitState.lastModified = new Date().toISOString();

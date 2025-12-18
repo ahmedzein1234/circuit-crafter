@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import type { Env } from '../types/env';
 
-const usersRouter = new Hono<{ Bindings: Env }>();
+const usersRouter = new Hono<Env>();
 
 // Get current user profile
 usersRouter.get('/me', authMiddleware, async (c) => {

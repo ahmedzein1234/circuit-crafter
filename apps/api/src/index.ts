@@ -8,7 +8,7 @@ import { authRouter } from './routes/auth';
 import { simulationRouter } from './routes/simulation';
 import type { Env } from './types/env';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<Env>();
 
 // Middleware
 app.use('*', logger());
