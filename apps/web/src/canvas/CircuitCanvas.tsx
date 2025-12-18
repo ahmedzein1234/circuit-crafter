@@ -46,13 +46,6 @@ export function CircuitCanvas() {
     rotateComponent,
   } = useCircuitStore();
 
-  // Debug: Log when components change
-  useEffect(() => {
-    console.log('=== Components changed ===');
-    console.log('Component count:', components.length);
-    console.log('Component IDs:', components.map(c => c.id));
-  }, [components]);
-
   // Update dimensions on resize
   useEffect(() => {
     const updateDimensions = () => {
@@ -146,9 +139,8 @@ export function CircuitCanvas() {
       [canvasOffset]
     ),
     onLongPress: useCallback(
-      (position: { x: number; y: number }) => {
+      (_position: { x: number; y: number }) => {
         // Show context menu on long press (future feature)
-        console.log('Long press at', position);
       },
       []
     ),
@@ -345,9 +337,6 @@ export function CircuitCanvas() {
         const componentType = e.dataTransfer?.getData('component-type');
         const variantData = e.dataTransfer?.getData('component-variant');
 
-        console.log('=== Drop Event (document) ===');
-        console.log('Component type:', componentType);
-
         if (componentType) {
           // Use refs to get current values
           const offset = canvasOffsetRef.current;
@@ -358,14 +347,9 @@ export function CircuitCanvas() {
 
           try {
             const variant = variantData ? JSON.parse(variantData) : undefined;
-            console.log('Adding component at:', { x, y });
             useCircuitStore.getState().addComponent(componentType as never, { x, y }, variant);
-            console.log('Success! Components now:', useCircuitStore.getState().components.length);
-            // Play sound
-            const audio = new Audio();
-            audio.src = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU';
-          } catch (err) {
-            console.error('Error adding component:', err);
+          } catch {
+            // Silent fail - component couldn't be added
           }
         }
       }
@@ -509,34 +493,6 @@ export function CircuitCanvas() {
           </div>
         </div>
       )}
-
-      {/* Debug: Test button to add component */}
-      <div className="absolute top-4 left-4 z-20 flex gap-2">
-        <button
-          className="px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-          onClick={() => {
-            console.log('Test: Adding battery via button');
-            console.log('Current components:', components.length);
-            useCircuitStore.getState().addComponent('battery', { x: 100 + components.length * 80, y: 100 }, { voltage: 9 });
-            console.log('After add:', useCircuitStore.getState().components.length);
-          }}
-        >
-          + Add Battery (Test)
-        </button>
-        <button
-          className="px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-          onClick={() => {
-            console.log('Test: Adding resistor via button');
-            useCircuitStore.getState().addComponent('resistor', { x: 100 + components.length * 80, y: 200 });
-            console.log('After add:', useCircuitStore.getState().components.length);
-          }}
-        >
-          + Add Resistor (Test)
-        </button>
-        <span className="px-3 py-2 bg-gray-700 text-white text-xs rounded">
-          Components: {components.length}
-        </span>
-      </div>
 
       {/* Context Menu */}
       {contextMenu && (

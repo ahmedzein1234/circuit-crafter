@@ -49,12 +49,6 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
 
   // Handle click - main interaction for wiring
   const handleClick = (e: { cancelBubble: boolean; evt?: Event }) => {
-    console.log('=== Terminal Click ===');
-    console.log('Terminal ID:', terminal.id);
-    console.log('Terminal Type:', terminal.type);
-    console.log('Is Drawing Wire:', isDrawingWire);
-    console.log('Wire Start Terminal:', wireStartTerminal);
-
     e.cancelBubble = true;
     if (e.evt) {
       e.evt.stopPropagation();
@@ -63,16 +57,12 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
     if (isDrawingWire) {
       // If drawing wire and this is a different terminal, complete the connection
       if (wireStartTerminal !== terminal.id) {
-        console.log('Completing wire from', wireStartTerminal, 'to', terminal.id);
         finishWireDrawing(terminal.id);
         play('connect');
-      } else {
-        console.log('Same terminal clicked, ignoring');
       }
       // If same terminal, do nothing (user can click elsewhere to cancel)
     } else {
       // Start drawing a new wire from this terminal
-      console.log('Starting wire from terminal:', terminal.id);
       startWireDrawing(terminal.id);
       play('click');
     }

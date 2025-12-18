@@ -19,9 +19,6 @@ import type { CircuitComponent } from '@circuit-crafter/shared';
 export function ComponentRenderer() {
   const { components, selectedComponentId, simulationResult } = useCircuitStore();
 
-  // Debug log
-  console.log('ComponentRenderer render, components:', components.length);
-
   const getComponentSimulation = (componentId: string) => {
     return simulationResult?.components.find((c) => c.componentId === componentId);
   };

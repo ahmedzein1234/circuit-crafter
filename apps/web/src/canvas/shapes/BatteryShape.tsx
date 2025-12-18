@@ -15,15 +15,10 @@ export function BatteryShape({ component, isSelected, simulation }: BatteryShape
   const { width, height } = COMPONENT_DEFAULTS.battery;
 
   const handleDragEnd = (e: { target: { x: () => number; y: () => number } }) => {
-    console.log('Component drag ended at:', e.target.x(), e.target.y());
     updateComponentPosition(component.id, {
       x: e.target.x(),
       y: e.target.y(),
     });
-  };
-
-  const handleDragStart = () => {
-    console.log('Component drag started:', component.id);
   };
 
   const isPowered = simulation?.state === 'powered' || simulation?.current !== undefined && simulation.current > 0;
@@ -34,10 +29,8 @@ export function BatteryShape({ component, isSelected, simulation }: BatteryShape
       y={component.position.y}
       rotation={component.rotation}
       draggable
-      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={(e) => {
-        console.log('Battery component clicked:', component.id);
         e.cancelBubble = true;
         selectComponent(component.id);
       }}

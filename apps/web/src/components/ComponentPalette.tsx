@@ -298,7 +298,6 @@ export function ComponentPalette() {
 
   const handleDragStart = useCallback(
     (e: React.DragEvent, component: ComponentInfo) => {
-      console.log('Drag start:', component.type, component.variant);
       e.dataTransfer.setData('component-type', component.type);
       if (component.variant) {
         e.dataTransfer.setData('component-variant', JSON.stringify(component.variant));
