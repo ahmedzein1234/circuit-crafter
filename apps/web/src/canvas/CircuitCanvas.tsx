@@ -26,6 +26,7 @@ export function CircuitCanvas() {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const lastPinchScaleRef = useRef(1);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [showConnectionTip, setShowConnectionTip] = useState(true);
 
   const {
     components,
@@ -557,6 +558,36 @@ export function CircuitCanvas() {
               </span>{' '}
               Pinch to zoom • Two fingers to move around
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Connection tip - shows when there are components but no wires */}
+      {components.length > 0 && wires.length === 0 && showConnectionTip && !isDrawingWire && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 animate-fade-in max-w-[90vw]">
+          <div className="bg-gradient-to-r from-purple-600/95 to-blue-600/95 backdrop-blur px-4 py-3 rounded-xl shadow-lg border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-2xl">🔌</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium text-sm md:text-base">
+                  Click the colored circles to connect wires!
+                </p>
+                <p className="text-white/70 text-xs md:text-sm mt-0.5">
+                  Each component has terminals (dots) - click one, then click another to connect
+                </p>
+              </div>
+              <button
+                onClick={() => setShowConnectionTip(false)}
+                className="flex-shrink-0 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                title="Dismiss tip"
+              >
+                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
