@@ -6,6 +6,7 @@ import { ComponentRenderer } from './ComponentRenderer';
 import { WireRenderer } from './WireRenderer';
 import { WirePreview, ConnectionValidity } from './WirePreview';
 import { useCircuitStore } from '../stores/circuitStore';
+import { useCanvasStore } from '../stores/canvasStore';
 import { useTouchGestures } from '../hooks/useTouchGestures';
 import { getAbsoluteTerminalPosition } from './utils/terminalPosition';
 // Sound effects available for future features
@@ -49,6 +50,8 @@ export function CircuitCanvas() {
     rotateComponent,
   } = useCircuitStore();
 
+  const setStageRef = useCanvasStore((state) => state.setStageRef);
+
   // Update dimensions on resize
   useEffect(() => {
     const updateDimensions = () => {
@@ -64,6 +67,14 @@ export function CircuitCanvas() {
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+
+  // Store stage ref for export functionality
+  useEffect(() => {
+    if (stageRef.current) {
+      setStageRef(stageRef.current);
+    }
+    return () => setStageRef(null);
+  }, [setStageRef]);
 
   // Handle click on empty canvas area - deselect component only
   // Wire cancellation is handled by handleMouseUp to avoid duplicate handling
