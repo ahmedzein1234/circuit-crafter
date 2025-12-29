@@ -22,6 +22,10 @@ export function Toolbar({ onHelpClick, onTemplatesClick }: ToolbarProps) {
     removeComponent,
     removeWire,
     rotateComponent,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useCircuitStore();
 
   const { theme, toggleTheme } = useThemeStore();
@@ -92,6 +96,42 @@ export function Toolbar({ onHelpClick, onTemplatesClick }: ToolbarProps) {
           </button>
         </div>
       )}
+
+      {/* Undo/Redo buttons - visible on all devices */}
+      <div className="flex items-center gap-1 mr-1 md:mr-2 pr-1 md:pr-2 border-r border-gray-700 dark:border-gray-700 light:border-gray-300">
+        <button
+          onClick={undo}
+          disabled={!canUndo}
+          className="min-w-touch-target md:min-w-11 min-h-touch-target md:min-h-11 px-2 md:px-3 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-800 light:hover:bg-gray-200 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          title="Undo (Ctrl+Z)"
+          aria-label="Undo last action"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+            />
+          </svg>
+        </button>
+        <button
+          onClick={redo}
+          disabled={!canRedo}
+          className="min-w-touch-target md:min-w-11 min-h-touch-target md:min-h-11 px-2 md:px-3 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-800 light:hover:bg-gray-200 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-white dark:hover:text-white light:hover:text-gray-900 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          title="Redo (Ctrl+Shift+Z)"
+          aria-label="Redo last action"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"
+            />
+          </svg>
+        </button>
+      </div>
 
       {/* Grid toggle */}
       <button
