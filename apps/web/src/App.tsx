@@ -31,6 +31,7 @@ import { FloatingXPContainer, useXPNotificationStore } from './components/Floati
 import { AchievementGallery } from './components/AchievementGallery';
 import { SaveCircuitModal } from './components/SaveCircuitModal';
 import { MyCircuitsPanel } from './components/MyCircuitsPanel';
+import { TemplatesModal } from './components/TemplatesModal';
 import { useCircuitsManagerStore } from './stores/circuitsManagerStore';
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [levelUpValue, setLevelUpValue] = useState(1);
   const [showAchievementGallery, setShowAchievementGallery] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
 
   // Initialize onboarding keyboard shortcuts
   useOnboardingKeyboard();
@@ -223,7 +225,7 @@ function App() {
           <XPProgressBar compact />
         </div>
 
-        <Toolbar onHelpClick={handleHelpClick} />
+        <Toolbar onHelpClick={handleHelpClick} onTemplatesClick={() => setShowTemplatesModal(true)} />
       </header>
 
       {/* Main Content */}
@@ -329,6 +331,12 @@ function App() {
       {/* Save/Load Modals */}
       <SaveCircuitModal />
       <MyCircuitsPanel />
+
+      {/* Templates Modal */}
+      <TemplatesModal
+        isOpen={showTemplatesModal}
+        onClose={() => setShowTemplatesModal(false)}
+      />
 
       {/* Achievement Gallery Button (floating) */}
       <button

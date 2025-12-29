@@ -7,9 +7,10 @@ import { useCircuitsManagerStore } from '../stores/circuitsManagerStore';
 
 interface ToolbarProps {
   onHelpClick: () => void;
+  onTemplatesClick: () => void;
 }
 
-export function Toolbar({ onHelpClick }: ToolbarProps) {
+export function Toolbar({ onHelpClick, onTemplatesClick }: ToolbarProps) {
   const {
     clearCircuit,
     components,
@@ -187,6 +188,24 @@ export function Toolbar({ onHelpClick }: ToolbarProps) {
           </span>
         </button>
       )}
+
+      {/* Templates button */}
+      <button
+        onClick={onTemplatesClick}
+        className="flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-lg bg-gradient-to-r from-cyan-600/80 to-teal-600/80 hover:from-cyan-600 hover:to-teal-600 text-white text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+        title="Browse circuit templates"
+        aria-label="Open circuit templates"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+          />
+        </svg>
+        <span className="hidden sm:inline">Templates</span>
+      </button>
 
       {/* Tutorial button */}
       {!isInTutorialMode && (
