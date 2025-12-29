@@ -13,8 +13,9 @@ import { BuzzerShape } from './shapes/BuzzerShape';
 import { MotorShape } from './shapes/MotorShape';
 import { PotentiometerShape } from './shapes/PotentiometerShape';
 import { FuseShape } from './shapes/FuseShape';
-import { SparkEffect } from './effects';
+import { SparkEffect, WarningIndicator } from './effects';
 import type { CircuitComponent } from '@circuit-crafter/shared';
+import { COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
 
 export function ComponentRenderer() {
   const { components, selectedComponentId, simulationResult } = useCircuitStore();
@@ -23,9 +24,14 @@ export function ComponentRenderer() {
     return simulationResult?.components.find((c) => c.componentId === componentId);
   };
 
+  const getComponentWarnings = (componentId: string) => {
+    return simulationResult?.warnings.filter((w) => w.componentIds.includes(componentId)) || [];
+  };
+
   const renderComponent = (component: CircuitComponent) => {
     const isSelected = selectedComponentId === component.id;
     const simulation = getComponentSimulation(component.id);
+    const warnings = getComponentWarnings(component.id);
     const isOverloaded = simulation?.isOverloaded || simulation?.state === 'overloaded' || simulation?.state === 'blown';
 
     const commonProps = {
@@ -33,6 +39,7 @@ export function ComponentRenderer() {
       component,
       isSelected,
       simulation,
+      warnings,
     };
 
     let componentShape: JSX.Element | null = null;
@@ -91,6 +98,10 @@ export function ComponentRenderer() {
       return Math.min(Math.max((ratio - 1) * 0.5, 0.3), 1);
     };
 
+    // Get component dimensions for positioning warning indicator
+    const dimensions = COMPONENT_DEFAULTS[component.type as keyof typeof COMPONENT_DEFAULTS];
+    const width = dimensions?.width ?? 60;
+
     return (
       <Group key={component.id}>
         {componentShape}
@@ -100,6 +111,13 @@ export function ComponentRenderer() {
             y={component.position.y}
             active={true}
             intensity={getOverloadIntensity()}
+          />
+        )}
+        {warnings.length > 0 && (
+          <WarningIndicator
+            x={component.position.x + width + 8}
+            y={component.position.y - 8}
+            warnings={warnings}
           />
         )}
       </Group>

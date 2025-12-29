@@ -3,6 +3,7 @@ import { useThemeStore } from '../stores/themeStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useSandboxStore } from '../stores/sandboxStore';
 import { useSocialStore } from '../stores/socialStore';
+import { useCircuitsManagerStore } from '../stores/circuitsManagerStore';
 
 interface ToolbarProps {
   onHelpClick: () => void;
@@ -26,6 +27,13 @@ export function Toolbar({ onHelpClick }: ToolbarProps) {
   const { openLevelSelector, getTotalProgress, isInTutorialMode } = useTutorialStore();
   const { isSandboxMode, toggleSandboxMode } = useSandboxStore();
   const { openShareModal, openLeaderboard, openProfileModal } = useSocialStore();
+  const {
+    openSaveModal,
+    openLoadModal,
+    currentCircuitName,
+    hasUnsavedChanges,
+    isSaving,
+  } = useCircuitsManagerStore();
   const tutorialProgress = getTotalProgress();
 
   const handleDelete = () => {
@@ -257,13 +265,51 @@ export function Toolbar({ onHelpClick }: ToolbarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Save/Load placeholder - Hidden on small mobile */}
+      {/* Current circuit indicator */}
+      {currentCircuitName && (
+        <div className="hidden md:flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 rounded-lg text-sm">
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span className="text-gray-300 max-w-24 truncate">{currentCircuitName}</span>
+          {hasUnsavedChanges && (
+            <span className="w-2 h-2 bg-amber-500 rounded-full" title="Unsaved changes" />
+          )}
+        </div>
+      )}
+
+      {/* Open button */}
       <button
-        className="hidden sm:block px-3 py-2 min-h-touch-target md:min-h-11 text-mobile-xs md:text-sm font-medium bg-gray-800 dark:bg-gray-800 light:bg-gray-200 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-300 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 text-gray-300 dark:text-gray-300 light:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        title="Save circuit"
+        onClick={openLoadModal}
+        className="hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-touch-target md:min-h-11 text-mobile-xs md:text-sm font-medium bg-gray-800 dark:bg-gray-800 light:bg-gray-200 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-300 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 text-gray-300 dark:text-gray-300 light:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        title="Open circuit (Ctrl+O)"
+        aria-label="Open saved circuit"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
+        </svg>
+        <span className="hidden lg:inline">Open</span>
+      </button>
+
+      {/* Save button */}
+      <button
+        onClick={openSaveModal}
+        disabled={components.length === 0 || isSaving}
+        className="hidden sm:flex items-center gap-1.5 px-3 py-2 min-h-touch-target md:min-h-11 text-mobile-xs md:text-sm font-medium bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        title="Save circuit (Ctrl+S)"
         aria-label="Save circuit"
       >
-        Save
+        {isSaving ? (
+          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+          </svg>
+        )}
+        <span className="hidden lg:inline">{hasUnsavedChanges ? 'Save*' : 'Save'}</span>
       </button>
 
       {/* Clear - Icon only on mobile */}

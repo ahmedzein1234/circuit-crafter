@@ -43,9 +43,10 @@ export class CircuitSolver {
     if (batteries.length === 0) {
       warnings.push({
         type: 'open_circuit',
-        message: 'No power source in circuit',
+        message: 'No battery found - your circuit needs power!',
         componentIds: [],
         severity: 'warning',
+        helpText: 'Drag a battery from the parts menu onto your board. Connect the + side to your circuit parts.',
       });
     }
 
@@ -53,11 +54,18 @@ export class CircuitSolver {
     if (grounds.length === 0 && batteries.length > 0) {
       warnings.push({
         type: 'no_ground',
-        message: 'No ground reference - using battery negative as reference',
+        message: 'Add a ground to complete the circuit!',
         componentIds: [],
         severity: 'info',
+        helpText: 'Ground is where electricity returns to. Connect it to the - side of your battery.',
       });
     }
+
+    // Check for disconnected components
+    this.detectDisconnectedComponents(components, graph, warnings);
+
+    // Check for LED reverse polarity
+    this.detectLEDReversePolarity(components, graph, warnings);
 
     // Calculate voltages and currents
     let hasShortCircuit = false;
@@ -88,9 +96,10 @@ export class CircuitSolver {
         hasOpenCircuit = true;
         warnings.push({
           type: 'open_circuit',
-          message: 'No complete path from positive to negative terminal',
+          message: 'Electricity can\'t flow! Make a complete circle.',
           componentIds: [battery.id],
           severity: 'warning',
+          helpText: 'Connect wires from the battery + side, through your parts, and back to the - side or ground. Electricity needs a complete path!',
         });
       }
 
@@ -125,9 +134,10 @@ export class CircuitSolver {
           hasShortCircuit = true;
           warnings.push({
             type: 'short_circuit',
-            message: 'Short circuit detected - very low resistance path',
+            message: 'Danger! Short circuit - too much power flowing!',
             componentIds: [battery.id],
             severity: 'error',
+            helpText: 'You connected + to - with no parts in between! This is like a superhighway for electricity and can break things. Add a resistor or LED to slow it down.',
           });
           totalResistance = SIMULATION.MIN_RESISTANCE;
         }
@@ -183,11 +193,13 @@ export class CircuitSolver {
       componentResults.push(result);
 
       if (result.isOverloaded) {
+        const componentName = this.getComponentDisplayName(component.type);
         warnings.push({
           type: 'overload',
-          message: `${component.type} is overloaded`,
+          message: `${componentName} is overloaded`,
           componentIds: [component.id],
           severity: 'warning',
+          helpText: `Too much current or voltage is passing through this ${componentName.toLowerCase()}. Add resistors to limit current, or reduce the voltage source.`,
         });
       }
 
@@ -428,6 +440,90 @@ export class CircuitSolver {
         return !inputs[0];
       default:
         return false;
+    }
+  }
+
+  private getComponentDisplayName(type: string): string {
+    const names: Record<string, string> = {
+      battery: 'Battery',
+      resistor: 'Resistor',
+      led: 'LED',
+      switch: 'Switch',
+      and_gate: 'AND Gate',
+      or_gate: 'OR Gate',
+      not_gate: 'NOT Gate',
+      ground: 'Ground',
+      capacitor: 'Capacitor',
+      diode: 'Diode',
+      transistor: 'Transistor',
+      buzzer: 'Buzzer',
+      motor: 'Motor',
+      potentiometer: 'Potentiometer',
+      fuse: 'Fuse',
+    };
+    return names[type] || type;
+  }
+
+  private detectDisconnectedComponents(
+    components: CircuitComponent[],
+    graph: CircuitGraph,
+    warnings: SimulationWarning[]
+  ): void {
+    // Find all components that have no wire connections
+    const batteries = components.filter((c) => c.type === 'battery');
+
+    if (batteries.length === 0) return; // No power source, other warning handles this
+
+    for (const component of components) {
+      if (component.type === 'battery' || component.type === 'ground') continue;
+
+      // Check if component is connected to the circuit
+      const hasWireConnection = component.terminals.some((terminal) => {
+        const node = graph.getNodeByTerminal(terminal.id);
+        return node && node.connectedNodes.length > 1; // More than just internal component connection
+      });
+
+      if (!hasWireConnection) {
+        const componentName = this.getComponentDisplayName(component.type);
+        warnings.push({
+          type: 'disconnected',
+          message: `${componentName} is not connected to the circuit`,
+          componentIds: [component.id],
+          severity: 'info',
+          helpText: `This ${componentName.toLowerCase()} has no wire connections. Connect its terminals to other components using wires to make it part of the circuit.`,
+        });
+      }
+    }
+  }
+
+  private detectLEDReversePolarity(
+    components: CircuitComponent[],
+    graph: CircuitGraph,
+    warnings: SimulationWarning[]
+  ): void {
+    const leds = components.filter((c) => c.type === 'led');
+
+    for (const led of leds) {
+      const positiveTerminal = led.terminals.find((t) => t.type === 'positive');
+      const negativeTerminal = led.terminals.find((t) => t.type === 'negative');
+
+      if (!positiveTerminal || !negativeTerminal) continue;
+
+      const positiveNode = graph.getNodeByTerminal(positiveTerminal.id);
+      const negativeNode = graph.getNodeByTerminal(negativeTerminal.id);
+
+      if (!positiveNode || !negativeNode) continue;
+
+      // Check if LED is connected in reverse (negative terminal has higher voltage than positive)
+      if (positiveNode.voltage < negativeNode.voltage && Math.abs(positiveNode.voltage - negativeNode.voltage) > 0.1) {
+        warnings.push({
+          type: 'reverse_polarity',
+          message: 'LED is backwards! It won\'t light up.',
+          componentIds: [led.id],
+          severity: 'warning',
+          helpText: 'LEDs only work one way! The + side should connect towards the battery +, and the - side should connect towards ground. Try spinning it around (press R).',
+        });
+      }
     }
   }
 

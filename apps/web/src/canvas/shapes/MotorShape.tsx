@@ -5,6 +5,7 @@ import type { CircuitComponent, ComponentSimulationResult } from '@circuit-craft
 import { COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
 import { useEffect, useRef, useState } from 'react';
 import type Konva from 'konva';
+import { getLocalTerminalPosition, getRotatableGroupProps, adjustDragEndPosition } from '../utils/terminalPosition';
 
 interface MotorShapeProps {
   component: CircuitComponent;
@@ -17,13 +18,7 @@ export function MotorShape({ component, isSelected, simulation }: MotorShapeProp
   const { width, height } = COMPONENT_DEFAULTS.motor;
   const shaftGroupRef = useRef<Konva.Group>(null);
   const [rotation, setRotation] = useState(0);
-
-  const handleDragEnd = (e: { target: { x: () => number; y: () => number } }) => {
-    updateComponentPosition(component.id, {
-      x: e.target.x(),
-      y: e.target.y(),
-    });
-  };
+  const groupProps = getRotatableGroupProps(component, width, height);
 
   const isActive = simulation?.isActive ?? false;
   const speed = simulation?.brightness ?? 0; // Use brightness as speed indicator
@@ -51,11 +46,12 @@ export function MotorShape({ component, isSelected, simulation }: MotorShapeProp
 
   return (
     <Group
-      x={component.position.x}
-      y={component.position.y}
-      rotation={component.rotation}
+      {...groupProps}
       draggable
-      onDragEnd={handleDragEnd}
+      onDragEnd={(e) => {
+        const pos = adjustDragEndPosition(e.target.x(), e.target.y(), width, height);
+        updateComponentPosition(component.id, pos);
+      }}
       onClick={(e) => {
         e.cancelBubble = true;
         selectComponent(component.id);
@@ -178,10 +174,7 @@ export function MotorShape({ component, isSelected, simulation }: MotorShapeProp
           key={terminal.id}
           terminal={{
             ...terminal,
-            position: {
-              x: terminal.position.x - component.position.x,
-              y: terminal.position.y - component.position.y,
-            },
+            position: getLocalTerminalPosition(terminal, component, width, height),
           }}
           componentId={component.id}
         />

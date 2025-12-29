@@ -8,6 +8,8 @@ import { OnboardingFlow, useOnboardingKeyboard } from './components/OnboardingFl
 import { MobileNavigation, type MobileTab } from './components/MobileNavigation';
 import { MobileDrawer } from './components/MobileDrawer';
 import { DailyRewardModalContainer } from './components/DailyRewardModal';
+import { SkipLinks } from './components/SkipLinks';
+import { CanvasErrorBoundary, PanelErrorBoundary } from './components/ErrorBoundary';
 import {
   TutorialLevelSelector,
   TutorialModeOverlay,
@@ -20,19 +22,32 @@ import { useThemeStore } from './stores/themeStore';
 import { useOnboardingStore } from './stores/onboardingStore';
 import { initializeDailyChallenge } from './stores/dailyChallengeStore';
 import { useTutorialStore } from './stores/tutorialStore';
+import { useGamificationStore } from './stores/gamificationStore';
 import { AchievementNotification } from './components/AchievementNotification';
 import { StreakIndicator } from './components/StreakIndicator';
 import { XPProgressBar } from './components/XPProgressBar';
+import { LevelUpModal } from './components/LevelUpModal';
+import { FloatingXPContainer, useXPNotificationStore } from './components/FloatingXPGain';
+import { AchievementGallery } from './components/AchievementGallery';
+import { SaveCircuitModal } from './components/SaveCircuitModal';
+import { MyCircuitsPanel } from './components/MyCircuitsPanel';
+import { useCircuitsManagerStore } from './stores/circuitsManagerStore';
 
 function App() {
   const { runSimulation, undo, redo } = useCircuitStore();
   const theme = useThemeStore((state) => state.theme);
   const { isOnboardingComplete, isOnboardingActive, startOnboarding } = useOnboardingStore();
   const { isInTutorialMode } = useTutorialStore();
+  const { pendingLevelUp, clearPendingLevelUp } = useGamificationStore();
+  const addXPNotification = useXPNotificationStore((state) => state.addNotification);
+  const { openSaveModal, openLoadModal, setHasUnsavedChanges } = useCircuitsManagerStore();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [activeTab, setActiveTab] = useState<MobileTab>('canvas');
   const [showComponentDrawer, setShowComponentDrawer] = useState(false);
   const [showSimulationDrawer, setShowSimulationDrawer] = useState(false);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [levelUpValue, setLevelUpValue] = useState(1);
+  const [showAchievementGallery, setShowAchievementGallery] = useState(false);
 
   // Initialize onboarding keyboard shortcuts
   useOnboardingKeyboard();
@@ -41,6 +56,25 @@ function App() {
   useEffect(() => {
     initializeDailyChallenge();
   }, []);
+
+  // Listen for XP gain events and show floating notifications
+  useEffect(() => {
+    const handleXPGain = (event: CustomEvent<{ amount: number; reason: string }>) => {
+      addXPNotification(event.detail.amount, event.detail.reason);
+    };
+
+    window.addEventListener('xp-gained', handleXPGain as EventListener);
+    return () => window.removeEventListener('xp-gained', handleXPGain as EventListener);
+  }, [addXPNotification]);
+
+  // Handle level up modal
+  useEffect(() => {
+    if (pendingLevelUp) {
+      setLevelUpValue(pendingLevelUp);
+      setShowLevelUpModal(true);
+      clearPendingLevelUp();
+    }
+  }, [pendingLevelUp, clearPendingLevelUp]);
 
   // Start onboarding for first-time users
   useEffect(() => {
@@ -77,23 +111,39 @@ function App() {
     document.documentElement.classList.add(theme);
   }, [theme]);
 
+  // Get components and wires for simulation trigger
+  const components = useCircuitStore((state) => state.components);
+  const wires = useCircuitStore((state) => state.wires);
+
   // Run simulation whenever circuit changes
   useEffect(() => {
-    const unsubscribe = useCircuitStore.subscribe(
-      (state) => [state.components, state.wires],
-      () => {
-        runSimulation();
-      }
-    );
+    runSimulation();
+  }, [components, wires, runSimulation]);
 
-    return unsubscribe;
-  }, [runSimulation]);
+  // Track unsaved changes when circuit changes
+  useEffect(() => {
+    if (components.length > 0 || wires.length > 0) {
+      setHasUnsavedChanges(true);
+    }
+  }, [components, wires, setHasUnsavedChanges]);
 
-  // Add keyboard shortcuts for undo/redo and help panel
+  // Add keyboard shortcuts for undo/redo, save/open, and help panel
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Ctrl+S (save) or Cmd+S on Mac
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        if (components.length > 0) {
+          openSaveModal();
+        }
+      }
+      // Check for Ctrl+O (open) or Cmd+O on Mac
+      else if ((event.ctrlKey || event.metaKey) && event.key === 'o') {
+        event.preventDefault();
+        openLoadModal();
+      }
       // Check for Ctrl+Z (undo) or Cmd+Z on Mac
-      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+      else if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
         event.preventDefault();
         undo();
       }
@@ -118,10 +168,13 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, components.length, openSaveModal, openLoadModal]);
 
   return (
     <div className="h-screen flex flex-col bg-circuit-bg dark:bg-circuit-bg light:bg-circuit-light-bg">
+      {/* Skip Links for keyboard navigation */}
+      <SkipLinks />
+
       {/* Header */}
       <header className="flex items-center justify-between px-3 md:px-6 py-2 md:py-3 border-b border-gray-800 dark:border-gray-800 light:border-circuit-light-border">
         <div className="flex items-center gap-2 md:gap-3">
@@ -176,18 +229,39 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 flex overflow-hidden pb-16 md:pb-0">
         {/* Left Sidebar - Component Palette (Desktop) */}
-        <aside className="hidden md:flex component-palette w-64 lg:w-72 border-r border-gray-800 dark:border-gray-800 light:border-circuit-light-border bg-gray-900/50 dark:bg-gray-900/50 light:bg-gray-50 flex-col">
-          <ComponentPalette />
+        <aside
+          id="component-palette"
+          tabIndex={-1}
+          aria-label="Component palette"
+          className="hidden md:flex component-palette w-64 lg:w-72 border-r border-gray-800 dark:border-gray-800 light:border-circuit-light-border bg-gray-900/50 dark:bg-gray-900/50 light:bg-gray-50 flex-col focus:outline-none"
+        >
+          <PanelErrorBoundary panelName="Component">
+            <ComponentPalette />
+          </PanelErrorBoundary>
         </aside>
 
         {/* Canvas Area */}
-        <section className="canvas-area flex-1 relative">
-          <CircuitCanvas />
+        <section
+          id="main-canvas"
+          tabIndex={-1}
+          aria-label="Circuit canvas"
+          className="canvas-area flex-1 relative focus:outline-none"
+        >
+          <CanvasErrorBoundary>
+            <CircuitCanvas />
+          </CanvasErrorBoundary>
         </section>
 
         {/* Right Sidebar - Simulation Panel (Desktop) */}
-        <aside className="hidden md:flex simulation-panel w-72 lg:w-80 border-l border-gray-800 dark:border-gray-800 light:border-circuit-light-border bg-gray-900/50 dark:bg-gray-900/50 light:bg-gray-50 flex-col">
-          <SimulationPanel />
+        <aside
+          id="simulation-panel"
+          tabIndex={-1}
+          aria-label="Simulation panel"
+          className="hidden md:flex simulation-panel w-72 lg:w-80 border-l border-gray-800 dark:border-gray-800 light:border-circuit-light-border bg-gray-900/50 dark:bg-gray-900/50 light:bg-gray-50 flex-col focus:outline-none"
+        >
+          <PanelErrorBoundary panelName="Simulation">
+            <SimulationPanel />
+          </PanelErrorBoundary>
         </aside>
       </main>
 
@@ -235,6 +309,35 @@ function App() {
       <ShareCircuitModal />
       <LeaderboardPanel />
       <UserProfileCard />
+
+      {/* Level Up Modal */}
+      <LevelUpModal
+        isOpen={showLevelUpModal}
+        level={levelUpValue}
+        onClose={() => setShowLevelUpModal(false)}
+      />
+
+      {/* Floating XP Notifications */}
+      <FloatingXPContainer />
+
+      {/* Achievement Gallery */}
+      <AchievementGallery
+        isOpen={showAchievementGallery}
+        onClose={() => setShowAchievementGallery(false)}
+      />
+
+      {/* Save/Load Modals */}
+      <SaveCircuitModal />
+      <MyCircuitsPanel />
+
+      {/* Achievement Gallery Button (floating) */}
+      <button
+        onClick={() => setShowAchievementGallery(true)}
+        className="fixed bottom-20 md:bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full shadow-lg shadow-purple-500/30 flex items-center justify-center text-2xl hover:scale-110 transition-transform z-30"
+        title="View Achievements"
+      >
+        🏆
+      </button>
     </div>
   );
 }

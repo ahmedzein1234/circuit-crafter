@@ -49,37 +49,52 @@ export function SparkEffect({ x, y, active, intensity = 0.5 }: SparkEffectProps)
     }
 
     const generateSpark = () => {
-      const numSparks = Math.floor(2 + intensity * 4);
-      const numParticles = Math.floor(3 + intensity * 5);
+      const numSparks = Math.floor(3 + intensity * 6); // More sparks
+      const numParticles = Math.floor(5 + intensity * 10); // More particles
 
-      // Generate lightning-like sparks
+      // Generate lightning-like sparks with branching
       const newSparks: Spark[] = [];
       for (let i = 0; i < numSparks; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const length = 10 + Math.random() * 15 * intensity;
+        const length = 12 + Math.random() * 20 * intensity; // Longer sparks
         newSparks.push({
           id: sparkIdRef.current++,
           startX: 0,
           startY: 0,
           endX: Math.cos(angle) * length,
           endY: Math.sin(angle) * length,
-          opacity: 0.7 + Math.random() * 0.3,
+          opacity: 0.8 + Math.random() * 0.2,
           color: sparkColors[Math.floor(Math.random() * sparkColors.length)],
         });
+
+        // Add branching sparks for more visual impact
+        if (Math.random() < 0.4 * intensity) {
+          const branchAngle = angle + (Math.random() - 0.5) * Math.PI / 2;
+          const branchLength = length * 0.6;
+          newSparks.push({
+            id: sparkIdRef.current++,
+            startX: Math.cos(angle) * length * 0.5,
+            startY: Math.sin(angle) * length * 0.5,
+            endX: Math.cos(angle) * length * 0.5 + Math.cos(branchAngle) * branchLength,
+            endY: Math.sin(angle) * length * 0.5 + Math.sin(branchAngle) * branchLength,
+            opacity: 0.6 + Math.random() * 0.2,
+            color: sparkColors[Math.floor(Math.random() * sparkColors.length)],
+          });
+        }
       }
 
-      // Generate particle sparks
+      // Generate particle sparks with varied sizes
       const newParticles: SparkParticle[] = [];
       for (let i = 0; i < numParticles; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * 3 * intensity;
+        const speed = 1.5 + Math.random() * 4 * intensity; // Faster particles
         newParticles.push({
           id: sparkIdRef.current++,
           x: 0,
           y: 0,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 1, // slight upward bias
-          radius: 1 + Math.random() * 2,
+          vy: Math.sin(angle) * speed - 1.5, // stronger upward bias
+          radius: 1 + Math.random() * 3, // Larger particles
           opacity: 1,
           color: sparkColors[Math.floor(Math.random() * sparkColors.length)],
         });
@@ -89,8 +104,8 @@ export function SparkEffect({ x, y, active, intensity = 0.5 }: SparkEffectProps)
       setParticles((prev) => [...prev, ...newParticles]);
     };
 
-    // Generate sparks at intervals based on intensity
-    const sparkInterval = setInterval(generateSpark, 200 - intensity * 100);
+    // Generate sparks at intervals based on intensity (more frequent)
+    const sparkInterval = setInterval(generateSpark, 150 - intensity * 80);
 
     // Animate particles
     const animate = () => {
@@ -100,8 +115,9 @@ export function SparkEffect({ x, y, active, intensity = 0.5 }: SparkEffectProps)
             ...p,
             x: p.x + p.vx,
             y: p.y + p.vy,
-            vy: p.vy + 0.2, // gravity
-            opacity: p.opacity - 0.05,
+            vx: p.vx * 0.98, // air resistance
+            vy: p.vy + 0.3, // stronger gravity
+            opacity: p.opacity - 0.04, // slower fade
           }))
           .filter((p) => p.opacity > 0)
       );
@@ -109,7 +125,7 @@ export function SparkEffect({ x, y, active, intensity = 0.5 }: SparkEffectProps)
       // Fade out spark lines
       setSparks((prev) =>
         prev
-          .map((s) => ({ ...s, opacity: s.opacity - 0.15 }))
+          .map((s) => ({ ...s, opacity: s.opacity - 0.12 })) // slower fade for more visibility
           .filter((s) => s.opacity > 0)
       );
 
@@ -159,18 +175,38 @@ export function SparkEffect({ x, y, active, intensity = 0.5 }: SparkEffectProps)
         />
       ))}
 
-      {/* Central glow for overloaded component */}
+      {/* Central glow for overloaded component - enhanced with pulsing layers */}
+      <Circle
+        x={0}
+        y={0}
+        radius={12 + intensity * 6}
+        fill="#ef4444"
+        opacity={0.15 + Math.sin(Date.now() / 100) * 0.1}
+        shadowColor="#ef4444"
+        shadowBlur={20}
+        shadowOpacity={0.8}
+      />
       <Circle
         x={0}
         y={0}
         radius={8 + intensity * 4}
         fill="transparent"
         stroke="#ef4444"
-        strokeWidth={2}
-        opacity={0.3 + Math.sin(Date.now() / 100) * 0.2}
+        strokeWidth={3}
+        opacity={0.4 + Math.sin(Date.now() / 100) * 0.3}
         shadowColor="#ef4444"
+        shadowBlur={15}
+        shadowOpacity={0.6}
+      />
+      <Circle
+        x={0}
+        y={0}
+        radius={5 + intensity * 2}
+        fill="#fde047"
+        opacity={0.5 + Math.sin(Date.now() / 80) * 0.3}
+        shadowColor="#fde047"
         shadowBlur={10}
-        shadowOpacity={0.5}
+        shadowOpacity={0.8}
       />
     </Group>
   );

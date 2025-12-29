@@ -3,6 +3,7 @@ import { TerminalDot } from '../TerminalDot';
 import { useCircuitStore } from '../../stores/circuitStore';
 import type { CircuitComponent, ComponentSimulationResult } from '@circuit-crafter/shared';
 import { COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
+import { getLocalTerminalPosition, getRotatableGroupProps, adjustDragEndPosition } from '../utils/terminalPosition';
 
 interface BatteryShapeProps {
   component: CircuitComponent;
@@ -14,22 +15,17 @@ export function BatteryShape({ component, isSelected, simulation }: BatteryShape
   const { selectComponent, updateComponentPosition } = useCircuitStore();
   const { width, height } = COMPONENT_DEFAULTS.battery;
 
-  const handleDragEnd = (e: { target: { x: () => number; y: () => number } }) => {
-    updateComponentPosition(component.id, {
-      x: e.target.x(),
-      y: e.target.y(),
-    });
-  };
-
   const isPowered = simulation?.state === 'powered' || simulation?.current !== undefined && simulation.current > 0;
+  const groupProps = getRotatableGroupProps(component, width, height);
 
   return (
     <Group
-      x={component.position.x}
-      y={component.position.y}
-      rotation={component.rotation}
+      {...groupProps}
       draggable
-      onDragEnd={handleDragEnd}
+      onDragEnd={(e) => {
+        const pos = adjustDragEndPosition(e.target.x(), e.target.y(), width, height);
+        updateComponentPosition(component.id, pos);
+      }}
       onClick={(e) => {
         e.cancelBubble = true;
         selectComponent(component.id);
@@ -126,10 +122,7 @@ export function BatteryShape({ component, isSelected, simulation }: BatteryShape
           key={terminal.id}
           terminal={{
             ...terminal,
-            position: {
-              x: terminal.position.x - component.position.x,
-              y: terminal.position.y - component.position.y,
-            },
+            position: getLocalTerminalPosition(terminal, component, width, height),
           }}
           componentId={component.id}
         />

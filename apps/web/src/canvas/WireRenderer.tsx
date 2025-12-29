@@ -1,6 +1,8 @@
 import { Group, Line, Circle } from 'react-konva';
 import { useCircuitStore } from '../stores/circuitStore';
 import type { Position } from '@circuit-crafter/shared';
+import { COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
+import { getAbsoluteTerminalPosition } from './utils/terminalPosition';
 import { useEffect, useRef, useState } from 'react';
 
 interface Particle {
@@ -20,7 +22,13 @@ export function WireRenderer() {
     for (const component of components) {
       const terminal = component.terminals.find((t) => t.id === terminalId);
       if (terminal) {
-        return terminal.position;
+        // Get component dimensions based on type
+        const dimensions = COMPONENT_DEFAULTS[component.type as keyof typeof COMPONENT_DEFAULTS];
+        const width = dimensions?.width ?? 60;
+        const height = dimensions?.height ?? 40;
+
+        // Return the absolute visual position of the terminal
+        return getAbsoluteTerminalPosition(terminal, component, width, height);
       }
     }
     return null;

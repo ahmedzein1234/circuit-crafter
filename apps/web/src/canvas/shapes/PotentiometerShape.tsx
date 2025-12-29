@@ -3,6 +3,7 @@ import { TerminalDot } from '../TerminalDot';
 import { useCircuitStore } from '../../stores/circuitStore';
 import type { CircuitComponent, ComponentSimulationResult } from '@circuit-crafter/shared';
 import { COMPONENT_DEFAULTS, formatSI } from '@circuit-crafter/shared';
+import { getLocalTerminalPosition, getRotatableGroupProps, adjustDragEndPosition } from '../utils/terminalPosition';
 
 interface PotentiometerShapeProps {
   component: CircuitComponent;
@@ -13,13 +14,7 @@ interface PotentiometerShapeProps {
 export function PotentiometerShape({ component, isSelected, simulation }: PotentiometerShapeProps) {
   const { selectComponent, updateComponentPosition, updateComponentProperty } = useCircuitStore();
   const { width, height } = COMPONENT_DEFAULTS.potentiometer;
-
-  const handleDragEnd = (e: { target: { x: () => number; y: () => number } }) => {
-    updateComponentPosition(component.id, {
-      x: e.target.x(),
-      y: e.target.y(),
-    });
-  };
+  const groupProps = getRotatableGroupProps(component, width, height);
 
   const position = (component.properties as { position?: number }).position ?? 50;
   const maxResistance = (component.properties as { maxResistance?: number }).maxResistance ?? 10000;
@@ -51,11 +46,12 @@ export function PotentiometerShape({ component, isSelected, simulation }: Potent
 
   return (
     <Group
-      x={component.position.x}
-      y={component.position.y}
-      rotation={component.rotation}
+      {...groupProps}
       draggable
-      onDragEnd={handleDragEnd}
+      onDragEnd={(e) => {
+        const pos = adjustDragEndPosition(e.target.x(), e.target.y(), width, height);
+        updateComponentPosition(component.id, pos);
+      }}
       onClick={(e) => {
         e.cancelBubble = true;
         selectComponent(component.id);
@@ -139,10 +135,7 @@ export function PotentiometerShape({ component, isSelected, simulation }: Potent
           key={terminal.id}
           terminal={{
             ...terminal,
-            position: {
-              x: terminal.position.x - component.position.x,
-              y: terminal.position.y - component.position.y,
-            },
+            position: getLocalTerminalPosition(terminal, component, width, height),
           }}
           componentId={component.id}
         />

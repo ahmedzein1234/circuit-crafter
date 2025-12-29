@@ -1,15 +1,17 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
-import { GRID_SIZE, COMPONENT_DEFAULTS } from '@circuit-crafter/shared';
+import { GRID_SIZE, COMPONENT_DEFAULTS, type ComponentType, type LEDColor } from '@circuit-crafter/shared';
 import { GridLayer } from './GridLayer';
 import { ComponentRenderer } from './ComponentRenderer';
 import { WireRenderer } from './WireRenderer';
 import { WirePreview, ConnectionValidity } from './WirePreview';
 import { useCircuitStore } from '../stores/circuitStore';
 import { useTouchGestures } from '../hooks/useTouchGestures';
+import { getAbsoluteTerminalPosition } from './utils/terminalPosition';
 // Sound effects available for future features
 // import { useSoundEffects } from '../hooks/useSoundEffects';
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu';
+import { ProblemsPanel } from '../components/ProblemsPanel';
 
 interface ContextMenuState {
   x: number;
@@ -62,19 +64,16 @@ export function CircuitCanvas() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Handle click on empty canvas area
+  // Handle click on empty canvas area - deselect component only
+  // Wire cancellation is handled by handleMouseUp to avoid duplicate handling
   const handleStageClick = useCallback(
     (e: { target: { getStage: () => unknown } }) => {
       // Only deselect if clicking on the stage itself
       if (e.target === e.target.getStage()) {
         selectComponent(null);
-
-        if (isDrawingWire) {
-          cancelWireDrawing();
-        }
       }
     },
-    [selectComponent, isDrawingWire, cancelWireDrawing]
+    [selectComponent]
   );
 
   // Handle mouse move for wire preview
@@ -193,7 +192,13 @@ export function CircuitCanvas() {
     for (const component of components) {
       const terminal = component.terminals.find((t) => t.id === wireStartTerminal);
       if (terminal) {
-        return terminal.position;
+        // Get component dimensions based on type
+        const dimensions = COMPONENT_DEFAULTS[component.type as keyof typeof COMPONENT_DEFAULTS];
+        const width = dimensions?.width ?? 60;
+        const height = dimensions?.height ?? 40;
+
+        // Return the absolute visual position of the terminal
+        return getAbsoluteTerminalPosition(terminal, component, width, height);
       }
     }
     return null;
@@ -251,7 +256,7 @@ export function CircuitCanvas() {
   const wireStartPosition = getStartTerminalPosition();
   const connectionValidity = getConnectionValidity();
 
-  // Check if a point is within a component's bounds
+  // Check if a point is within a component's bounds (accounting for rotation)
   const findComponentAtPoint = useCallback((canvasX: number, canvasY: number): string | null => {
     // Check each component to see if the point is within its bounds
     for (const component of components) {
@@ -262,8 +267,21 @@ export function CircuitCanvas() {
       const height = dimensions?.height ?? 40;
       const padding = 10; // Extra padding for easier click detection
 
-      if (canvasX >= x - padding && canvasX <= x + width + padding &&
-          canvasY >= y - padding && canvasY <= y + height + padding) {
+      // Calculate component center
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+
+      // Transform click point to component's local coordinate system
+      // by rotating it in the opposite direction around the component center
+      const angleRad = -(component.rotation * Math.PI) / 180;
+      const dx = canvasX - centerX;
+      const dy = canvasY - centerY;
+      const localX = dx * Math.cos(angleRad) - dy * Math.sin(angleRad) + centerX;
+      const localY = dx * Math.sin(angleRad) + dy * Math.cos(angleRad) + centerY;
+
+      // Now check if the transformed point is within the unrotated bounds
+      if (localX >= x - padding && localX <= x + width + padding &&
+          localY >= y - padding && localY <= y + height + padding) {
         return component.id;
       }
     }
@@ -347,12 +365,26 @@ export function CircuitCanvas() {
           const x = (e.clientX - rect.left - offset.x) / scale;
           const y = (e.clientY - rect.top - offset.y) / scale;
 
-          try {
-            const variant = variantData ? JSON.parse(variantData) : undefined;
-            useCircuitStore.getState().addComponent(componentType as never, { x, y }, variant);
-          } catch {
-            // Silent fail - component couldn't be added
+          // Parse variant data if present
+          let variant: { color?: LEDColor; voltage?: number } | undefined;
+          if (variantData) {
+            try {
+              const parsed = JSON.parse(variantData);
+              variant = {
+                color: parsed.color as LEDColor | undefined,
+                voltage: parsed.voltage,
+              };
+            } catch {
+              variant = undefined;
+            }
           }
+
+          // Add the component - type is validated in createComponent
+          useCircuitStore.getState().addComponent(
+            componentType as ComponentType,
+            { x, y },
+            variant
+          );
         }
       }
     };
@@ -429,29 +461,31 @@ export function CircuitCanvas() {
 
       {/* Wire Drawing Mode Indicator */}
       {isDrawingWire && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 animate-fade-in">
-          <div className="bg-blue-600/95 backdrop-blur px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
-            <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-            <span className="text-white font-medium text-sm">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 animate-fade-in max-w-[90vw]">
+          <div className="bg-blue-600/95 backdrop-blur px-3 md:px-4 py-2 md:py-2 rounded-lg shadow-lg flex items-center gap-2 md:gap-3">
+            <span className="text-xl" role="img" aria-label="wire">
+              🔌
+            </span>
+            <span className="text-white font-medium text-mobile-sm md:text-sm">
               Drawing Wire
             </span>
-            <span className="text-blue-200 text-sm hidden sm:inline">
-              • Click terminal to connect
+            <span className="text-blue-200 text-mobile-xs md:text-sm hidden sm:inline">
+              • Tap a circle to connect
             </span>
             <button
               onClick={cancelWireDrawing}
-              className="ml-2 px-2 py-1 bg-blue-700 hover:bg-blue-800 text-white text-xs rounded transition-colors"
+              className="ml-1 md:ml-2 px-3 py-2 md:px-2 md:py-1 min-h-touch-target md:min-h-0 bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white text-mobile-xs md:text-xs rounded-lg md:rounded transition-colors touch-manipulation"
             >
-              Cancel (Esc)
+              Cancel
             </button>
           </div>
         </div>
       )}
 
-      {/* Zoom controls - Touch friendly on mobile */}
-      <div className="absolute bottom-4 right-4 md:bottom-4 md:right-4 bottom-20 flex flex-col gap-2">
+      {/* Zoom controls - Touch friendly on mobile, positioned above mobile nav */}
+      <div className="absolute bottom-20 right-4 md:bottom-4 md:right-4 flex flex-col gap-2 z-10">
         <button
-          className="w-12 h-12 md:w-11 md:h-11 min-w-touch-target md:min-w-0 rounded-lg bg-gray-800/90 dark:bg-gray-800/90 light:bg-white/90 backdrop-blur text-white dark:text-white light:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-100 hover:shadow-lg hover:shadow-blue-500/50 flex items-center justify-center font-bold text-xl md:text-lg transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg"
+          className="w-14 h-14 md:w-11 md:h-11 rounded-xl md:rounded-lg bg-gray-800/90 dark:bg-gray-800/90 light:bg-white/90 backdrop-blur text-white dark:text-white light:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-100 hover:shadow-lg hover:shadow-blue-500/50 flex items-center justify-center font-bold text-2xl md:text-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg touch-manipulation"
           onClick={() => setCanvasScale(canvasScale * 1.2)}
           title={`Zoom in (${Math.round(canvasScale * 100)}%)`}
           aria-label="Zoom in"
@@ -459,7 +493,7 @@ export function CircuitCanvas() {
           +
         </button>
         <button
-          className="w-12 h-12 md:w-11 md:h-11 min-w-touch-target md:min-w-0 rounded-lg bg-gray-800/90 dark:bg-gray-800/90 light:bg-white/90 backdrop-blur text-white dark:text-white light:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-100 hover:shadow-lg hover:shadow-blue-500/50 flex items-center justify-center font-bold text-xl md:text-lg transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg"
+          className="w-14 h-14 md:w-11 md:h-11 rounded-xl md:rounded-lg bg-gray-800/90 dark:bg-gray-800/90 light:bg-white/90 backdrop-blur text-white dark:text-white light:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-100 hover:shadow-lg hover:shadow-blue-500/50 flex items-center justify-center font-bold text-2xl md:text-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg touch-manipulation"
           onClick={() => setCanvasScale(canvasScale / 1.2)}
           title={`Zoom out (${Math.round(canvasScale * 100)}%)`}
           aria-label="Zoom out"
@@ -467,7 +501,7 @@ export function CircuitCanvas() {
           -
         </button>
         <button
-          className="w-12 h-12 md:w-11 md:h-11 min-w-touch-target md:min-w-0 rounded-lg bg-gray-800/90 dark:bg-gray-800/90 light:bg-white/90 backdrop-blur text-white dark:text-white light:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-100 hover:shadow-lg hover:shadow-blue-500/50 flex items-center justify-center text-mobile-xs md:text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg"
+          className="w-14 h-14 md:w-11 md:h-11 rounded-xl md:rounded-lg bg-gray-800/90 dark:bg-gray-800/90 light:bg-white/90 backdrop-blur text-white dark:text-white light:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-100 hover:shadow-lg hover:shadow-blue-500/50 flex items-center justify-center text-sm md:text-xs font-medium transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg touch-manipulation"
           onClick={() => {
             setCanvasScale(1);
             useCircuitStore.getState().setCanvasOffset({ x: 0, y: 0 });
@@ -482,16 +516,47 @@ export function CircuitCanvas() {
       {/* Instructions overlay */}
       {components.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
-          <div className="text-center text-gray-500 dark:text-gray-500 light:text-gray-400">
-            <p className="text-mobile-lg md:text-lg mb-2">
-              <span className="hidden md:inline">Drag components from the palette to start building</span>
-              <span className="md:hidden">Tap menu to add components</span>
+          <div className="text-center text-gray-400 dark:text-gray-400 light:text-gray-500">
+            <div className="mb-4 text-4xl" role="img" aria-label="welcome">
+              🚀
+            </div>
+            <p className="text-mobile-lg md:text-xl mb-3 font-semibold text-gray-300">
+              Let's Build Something Awesome!
             </p>
-            <p className="text-mobile-sm md:text-sm">
-              <span className="hidden md:inline">Click terminals to connect wires</span>
-              <span className="md:hidden">Tap terminals to connect wires</span>
+            <p className="text-mobile-base md:text-base mb-2">
+              <span className="hidden md:inline">
+                <span role="img" aria-label="parts">
+                  🧩
+                </span>{' '}
+                Drag parts from the left side onto this board
+              </span>
+              <span className="md:hidden">
+                <span role="img" aria-label="parts">
+                  🧩
+                </span>{' '}
+                Tap the menu button to add parts
+              </span>
             </p>
-            <p className="text-mobile-xs md:text-xs mt-2 md:hidden">Pinch to zoom, two fingers to pan</p>
+            <p className="text-mobile-sm md:text-sm text-gray-500">
+              <span className="hidden md:inline">
+                <span role="img" aria-label="connect">
+                  🔌
+                </span>{' '}
+                Click the circles to connect wires
+              </span>
+              <span className="md:hidden">
+                <span role="img" aria-label="connect">
+                  🔌
+                </span>{' '}
+                Tap circles to connect wires
+              </span>
+            </p>
+            <p className="text-mobile-xs md:text-xs mt-3 text-gray-600 md:hidden">
+              <span role="img" aria-label="zoom">
+                🔍
+              </span>{' '}
+              Pinch to zoom • Two fingers to move around
+            </p>
           </div>
         </div>
       )}
@@ -505,6 +570,9 @@ export function CircuitCanvas() {
           onClose={() => setContextMenu(null)}
         />
       )}
+
+      {/* Problems Panel */}
+      <ProblemsPanel />
     </div>
   );
 

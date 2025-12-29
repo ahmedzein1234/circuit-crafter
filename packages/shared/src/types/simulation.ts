@@ -26,10 +26,11 @@ export interface WireSimulationResult {
 }
 
 export interface SimulationWarning {
-  type: 'short_circuit' | 'overload' | 'no_ground' | 'open_circuit' | 'component_failure';
+  type: 'short_circuit' | 'overload' | 'no_ground' | 'open_circuit' | 'component_failure' | 'disconnected' | 'reverse_polarity' | 'no_load';
   message: string;
   componentIds: string[];
   severity: 'info' | 'warning' | 'error';
+  helpText?: string; // Educational tip on how to fix the issue
 }
 
 export interface SimulationResult {

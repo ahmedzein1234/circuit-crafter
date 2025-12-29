@@ -91,12 +91,28 @@ export default {
       },
       spacing: {
         'touch-target': '44px',
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
+      minWidth: {
+        'touch': '44px',
+      },
+      minHeight: {
+        'touch': '44px',
+        'touch-target': '44px',
       },
       zIndex: {
         'drawer': '40',
         'drawer-backdrop': '35',
         'mobile-nav': '50',
         'fab': '45',
+      },
+      screens: {
+        'xs': '475px',
+        'touch': { 'raw': '(hover: none) and (pointer: coarse)' },
+        'mouse': { 'raw': '(hover: hover) and (pointer: fine)' },
       },
     },
   },

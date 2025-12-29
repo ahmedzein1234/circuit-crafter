@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import type { ComponentType, LEDColor } from '@circuit-crafter/shared';
 import { COMPONENT_CATEGORIES } from '@circuit-crafter/shared';
 import { ComponentInfoPanel } from './ComponentInfoPanel';
+import { useCircuitStore } from '../stores/circuitStore';
 
 interface ComponentInfo {
   type: ComponentType;
@@ -19,7 +20,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'battery',
     name: '1.5V Battery',
-    description: 'AA cell battery',
+    description: 'Small power - like a TV remote',
     variant: { voltage: 1.5 },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
@@ -33,7 +34,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'battery',
     name: '9V Battery',
-    description: 'Standard 9V battery',
+    description: 'Medium power - gives energy!',
     variant: { voltage: 9 },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
@@ -47,7 +48,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'battery',
     name: '12V Battery',
-    description: 'High voltage battery',
+    description: 'Strong power - like a car!',
     variant: { voltage: 12 },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
@@ -62,7 +63,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'ground',
     name: 'Ground',
-    description: '0V reference',
+    description: 'Where electricity returns to',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="12" y1="4" x2="12" y2="10" />
@@ -75,7 +76,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'resistor',
     name: 'Resistor',
-    description: '1kOhm resistance',
+    description: 'Slows down electricity',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M2 12h3l2-4 3 8 3-8 3 8 2-4h4" strokeLinecap="round" strokeLinejoin="round" />
@@ -85,7 +86,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'capacitor',
     name: 'Capacitor',
-    description: 'Stores charge',
+    description: 'Stores electricity like a battery',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="2" y1="12" x2="9" y2="12" />
@@ -98,7 +99,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'potentiometer',
     name: 'Potentiometer',
-    description: 'Variable resistor',
+    description: 'Adjustable speed control',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M2 12h3l2-3 2 6 2-6 2 6 2-3h7" strokeLinecap="round" strokeLinejoin="round" />
@@ -110,7 +111,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'switch',
     name: 'Switch',
-    description: 'Toggle open/closed',
+    description: 'Turn things ON or OFF',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="4" cy="12" r="2" fill="currentColor" />
@@ -122,7 +123,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'diode',
     name: 'Diode',
-    description: 'One-way current',
+    description: 'One-way street for electricity',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="2" y1="12" x2="8" y2="12" />
@@ -135,7 +136,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'transistor',
     name: 'Transistor',
-    description: 'NPN amplifier/switch',
+    description: 'Electronic switch or amplifier',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="8" />
@@ -151,7 +152,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'led',
     name: 'Red LED',
-    description: 'Red light emitting diode',
+    description: 'Red light - makes things glow!',
     variant: { color: 'red' },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
@@ -165,7 +166,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'led',
     name: 'Green LED',
-    description: 'Green light emitting diode',
+    description: 'Green light - shines bright!',
     variant: { color: 'green' },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
@@ -179,7 +180,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'led',
     name: 'Blue LED',
-    description: 'Blue light emitting diode',
+    description: 'Blue light - cool color!',
     variant: { color: 'blue' },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
@@ -193,7 +194,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'led',
     name: 'Yellow LED',
-    description: 'Yellow light emitting diode',
+    description: 'Yellow light - sunshine!',
     variant: { color: 'yellow' },
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
@@ -207,7 +208,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'buzzer',
     name: 'Buzzer',
-    description: 'Audio output',
+    description: 'Makes buzzing sounds!',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="10" cy="12" r="6" />
@@ -220,7 +221,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'motor',
     name: 'Motor',
-    description: 'DC motor',
+    description: 'Spins things around!',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="8" />
@@ -231,7 +232,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'fuse',
     name: 'Fuse',
-    description: 'Overcurrent protection',
+    description: 'Safety guard - breaks if too much power',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="6" y="8" width="12" height="8" rx="2" />
@@ -244,7 +245,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'and_gate',
     name: 'AND Gate',
-    description: 'Logic AND',
+    description: 'Both ON = ON (like AND)',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M4 4h8a8 8 0 0 1 0 16H4V4z" />
@@ -257,7 +258,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'or_gate',
     name: 'OR Gate',
-    description: 'Logic OR',
+    description: 'Any ON = ON (like OR)',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M4 4c4 0 8 4 8 8s-4 8-8 8c2-2.5 3-5 3-8s-1-5.5-3-8z" />
@@ -271,7 +272,7 @@ const allComponents: ComponentInfo[] = [
   {
     type: 'not_gate',
     name: 'NOT Gate',
-    description: 'Logic inverter',
+    description: 'Flips ON to OFF and back',
     icon: (
       <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2">
         <polygon points="4,4 4,20 16,12" />
@@ -311,6 +312,28 @@ export function ComponentPalette() {
     []
   );
 
+  // Mobile tap-to-add: add component to center of canvas
+  const handleTapToAdd = useCallback(
+    (component: ComponentInfo) => {
+      const { addComponent } = useCircuitStore.getState();
+
+      // Add to center of visible canvas area
+      // Account for current viewport
+      const canvasCenter = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      };
+
+      const variant = component.variant ? {
+        color: component.variant.color,
+        voltage: component.variant.voltage,
+      } : undefined;
+
+      addComponent(component.type, canvasCenter, variant);
+    },
+    []
+  );
+
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
@@ -332,9 +355,9 @@ export function ComponentPalette() {
     <div className="flex flex-col h-full">
       <div className="p-3 md:p-4 border-b border-gray-800 dark:border-gray-800 light:border-gray-200 md:block hidden">
         <h2 className="text-sm font-semibold text-gray-400 dark:text-gray-400 light:text-gray-600 uppercase tracking-wider">
-          Components
+          Build Your Circuit!
         </h2>
-        <p className="text-xs text-gray-500 dark:text-gray-500 light:text-gray-500 mt-1">Drag onto canvas</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500 light:text-gray-500 mt-1">Drag parts onto the board to start</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 md:p-3 space-y-2 no-scrollbar">
@@ -390,6 +413,7 @@ export function ComponentPalette() {
                       component={component}
                       onDragStart={handleDragStart}
                       onInfoClick={() => setSelectedInfoType(component.type)}
+                      onTapToAdd={handleTapToAdd}
                     />
                   ))}
                 </div>
@@ -411,11 +435,12 @@ export function ComponentPalette() {
 
       {/* Help section - Desktop only */}
       <div className="p-3 border-t border-gray-800 dark:border-gray-800 light:border-gray-200 text-xs text-gray-500 dark:text-gray-500 light:text-gray-500 hidden md:block">
+        <p className="mb-1 font-semibold text-gray-400">Quick Tips:</p>
         <p className="mb-1">
-          <kbd className="px-1.5 py-0.5 bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded">R</kbd> Rotate
+          <kbd className="px-1.5 py-0.5 bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded">R</kbd> Spin around
         </p>
         <p className="mb-1">
-          <kbd className="px-1.5 py-0.5 bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded">Del</kbd> Delete
+          <kbd className="px-1.5 py-0.5 bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded">Del</kbd> Remove
         </p>
         <p>
           <kbd className="px-1.5 py-0.5 bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded">Esc</kbd> Cancel
@@ -429,34 +454,75 @@ interface ComponentItemProps {
   component: ComponentInfo;
   onDragStart: (e: React.DragEvent, component: ComponentInfo) => void;
   onInfoClick: () => void;
+  onTapToAdd: (component: ComponentInfo) => void;
 }
 
-function ComponentItem({ component, onDragStart, onInfoClick }: ComponentItemProps) {
+function ComponentItem({ component, onDragStart, onInfoClick, onTapToAdd }: ComponentItemProps) {
+  const [showTapHint, setShowTapHint] = useState(false);
+
   return (
-    <div
-      className="component-item flex items-center gap-3 text-gray-300 dark:text-gray-300 light:text-gray-700 group p-2 md:p-0 rounded-lg md:rounded-none hover:bg-gray-800/50 md:hover:bg-transparent transition-colors"
-      draggable
-      onDragStart={(e) => onDragStart(e, component)}
-    >
-      <div className="w-12 h-12 md:w-10 md:h-10 min-w-touch-target md:min-w-0 flex items-center justify-center bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded-lg flex-shrink-0">
-        {component.icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-mobile-base md:text-sm">{component.name}</p>
-        <p className="text-mobile-xs md:text-xs text-gray-500 dark:text-gray-500 light:text-gray-600 truncate">{component.description}</p>
-      </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onInfoClick();
+    <div className="relative">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`${component.name}. ${component.description}. Drag to add to circuit.`}
+        className="component-item flex items-center gap-3 text-gray-300 dark:text-gray-300 light:text-gray-700 group p-3 md:p-2 rounded-lg hover:bg-gray-800/50 md:hover:bg-gray-700/30 transition-all active:scale-95 touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-400"
+        draggable
+        onDragStart={(e) => onDragStart(e, component)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onTapToAdd(component);
+            setShowTapHint(true);
+            setTimeout(() => setShowTapHint(false), 2000);
+          }
         }}
-        className="md:opacity-0 md:group-hover:opacity-100 p-2 md:p-1 min-w-touch-target md:min-w-0 text-gray-500 dark:text-gray-500 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all"
-        title="Learn more"
       >
-        <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </button>
+        <div className="w-14 h-14 md:w-10 md:h-10 flex items-center justify-center bg-gray-800 dark:bg-gray-800 light:bg-gray-200 rounded-lg flex-shrink-0" aria-hidden="true">
+          {component.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-mobile-base md:text-sm">{component.name}</p>
+          <p className="text-mobile-xs md:text-xs text-gray-500 dark:text-gray-500 light:text-gray-600 truncate">{component.description}</p>
+        </div>
+
+        {/* Mobile: Tap-to-add button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onTapToAdd(component);
+            setShowTapHint(true);
+            setTimeout(() => setShowTapHint(false), 2000);
+          }}
+          aria-label={`Add ${component.name} to canvas`}
+          className="md:hidden p-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition-colors touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+
+        {/* Desktop: Info button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfoClick();
+          }}
+          aria-label={`Learn more about ${component.name}`}
+          className="hidden md:block md:opacity-0 md:group-hover:opacity-100 p-1 text-gray-500 dark:text-gray-500 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 focus:opacity-100"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Tap hint feedback */}
+      {showTapHint && (
+        <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg animate-fade-in md:hidden">
+          Added!
+        </div>
+      )}
     </div>
   );
 }

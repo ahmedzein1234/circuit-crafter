@@ -23,6 +23,13 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
 
   const categories: ShortcutCategory[] = [
     {
+      title: 'File',
+      shortcuts: [
+        { keys: [modKey, 'S'], description: 'Save circuit' },
+        { keys: [modKey, 'O'], description: 'Open saved circuit' },
+      ],
+    },
+    {
       title: 'Navigation',
       shortcuts: [
         { keys: ['Drag Canvas'], description: 'Pan the canvas' },

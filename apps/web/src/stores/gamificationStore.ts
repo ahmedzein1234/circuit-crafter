@@ -179,8 +179,12 @@ interface GamificationState {
   currentStreak: number;
   lastActiveDate: string | null;
 
+  // Level up tracking
+  pendingLevelUp: number | null;
+
   // Actions
   addXP: (amount: number, reason: string) => void;
+  clearPendingLevelUp: () => void;
   checkAchievements: () => void;
   recordCircuitCompleted: () => void;
   recordWirePlaced: () => void;
@@ -220,20 +224,44 @@ export const useGamificationStore = create<GamificationState>()(
       currentStreak: 0,
       lastActiveDate: null,
 
+      // Level up tracking
+      pendingLevelUp: null as number | null,
+
       // Actions
-      addXP: (amount, _reason) => {
+      addXP: (amount, reason) => {
+        const prevLevel = get().level;
         const newTotal = get().totalXP + amount;
         const levelInfo = getLevelFromXP(newTotal);
+
+        // Check for level up
+        const leveledUp = levelInfo.level > prevLevel;
 
         set({
           totalXP: newTotal,
           level: levelInfo.level,
           currentLevelXP: levelInfo.currentXP,
           xpForNextLevel: levelInfo.xpForNextLevel,
+          pendingLevelUp: leveledUp ? levelInfo.level : null,
         });
+
+        // Dispatch custom event for XP gain (used by FloatingXPGain component)
+        window.dispatchEvent(new CustomEvent('xp-gained', {
+          detail: { amount, reason }
+        }));
+
+        // Dispatch level up event if applicable
+        if (leveledUp) {
+          window.dispatchEvent(new CustomEvent('level-up', {
+            detail: { level: levelInfo.level }
+          }));
+        }
 
         // Check level achievements
         get().checkAchievements();
+      },
+
+      clearPendingLevelUp: () => {
+        set({ pendingLevelUp: null });
       },
 
       checkAchievements: () => {

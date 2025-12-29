@@ -89,8 +89,8 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
     }
   };
 
-  // Increased terminal sizes: base 5px -> 7px (40% increase)
-  const baseRadius = 7;
+  // Larger terminals for mobile: base 8px for better touch
+  const baseRadius = 8;
   const radius = isHovered ? baseRadius * 1.5 : isConnected ? baseRadius * 1.2 : baseRadius;
 
   // Format terminal type for display in tooltips
@@ -141,9 +141,9 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHoveredTerminal(null)}
     >
-      {/* Invisible hit area for easier clicking - larger touch target */}
+      {/* Invisible hit area for easier clicking - larger touch target (44px minimum for mobile) */}
       <Circle
-        radius={baseRadius * 2.5}
+        radius={baseRadius * 3}
         fill="transparent"
         stroke="transparent"
       />
@@ -168,15 +168,15 @@ export function TerminalDot({ terminal, componentId: _componentId }: TerminalDot
         </>
       )}
 
-      {/* Main terminal dot - larger and more prominent */}
+      {/* Main terminal dot - larger and more prominent with better mobile visibility */}
       <Circle
         radius={radius}
         fill={getColor()}
         stroke="#ffffff"
-        strokeWidth={2.5}
+        strokeWidth={3}
         shadowColor="black"
-        shadowBlur={5}
-        shadowOpacity={0.4}
+        shadowBlur={6}
+        shadowOpacity={0.5}
       />
 
       {/* Connection indicator */}

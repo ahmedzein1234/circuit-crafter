@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 interface Particle {
   id: number;
@@ -22,6 +23,7 @@ const COLORS = ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#a855f7', '#ec4899'
 
 export function CelebrationEffects({ trigger, type = 'confetti', onComplete }: CelebrationEffectsProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
+  const prefersReducedMotion = useReducedMotion();
 
   const createParticles = useCallback(() => {
     const newParticles: Particle[] = [];
@@ -50,6 +52,12 @@ export function CelebrationEffects({ trigger, type = 'confetti', onComplete }: C
   useEffect(() => {
     if (!trigger) return;
 
+    // Skip particle animations if user prefers reduced motion
+    if (prefersReducedMotion) {
+      onComplete?.();
+      return;
+    }
+
     createParticles();
 
     const interval = setInterval(() => {
@@ -75,7 +83,7 @@ export function CelebrationEffects({ trigger, type = 'confetti', onComplete }: C
     }, 16);
 
     return () => clearInterval(interval);
-  }, [trigger, createParticles, onComplete]);
+  }, [trigger, createParticles, onComplete, prefersReducedMotion]);
 
   if (particles.length === 0) return null;
 
@@ -123,8 +131,18 @@ interface XPGainEffectProps {
 export function XPGainEffect({ amount, onComplete }: XPGainEffectProps) {
   const [visible, setVisible] = useState(true);
   const [position, setPosition] = useState({ y: 0, opacity: 1 });
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    // If reduced motion, show briefly then hide
+    if (prefersReducedMotion) {
+      const timeout = setTimeout(() => {
+        setVisible(false);
+        onComplete?.();
+      }, 1500);
+      return () => clearTimeout(timeout);
+    }
+
     const interval = setInterval(() => {
       setPosition((prev) => ({
         y: prev.y - 2,
@@ -141,7 +159,7 @@ export function XPGainEffect({ amount, onComplete }: XPGainEffectProps) {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [onComplete]);
+  }, [onComplete, prefersReducedMotion]);
 
   if (!visible) return null;
 
@@ -149,8 +167,8 @@ export function XPGainEffect({ amount, onComplete }: XPGainEffectProps) {
     <div
       className="fixed left-1/2 top-1/2 -translate-x-1/2 pointer-events-none z-50 text-2xl font-bold text-yellow-400"
       style={{
-        transform: `translate(-50%, ${position.y}px)`,
-        opacity: position.opacity,
+        transform: prefersReducedMotion ? 'translate(-50%, 0)' : `translate(-50%, ${position.y}px)`,
+        opacity: prefersReducedMotion ? 1 : position.opacity,
         textShadow: '0 0 10px rgba(234, 179, 8, 0.5)',
       }}
     >
@@ -168,8 +186,19 @@ interface LevelUpEffectProps {
 export function LevelUpEffect({ level, onComplete }: LevelUpEffectProps) {
   const [visible, setVisible] = useState(true);
   const [scale, setScale] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    // Skip scaling animation if reduced motion is preferred
+    if (prefersReducedMotion) {
+      setScale(1);
+      const hide = setTimeout(() => {
+        setVisible(false);
+        onComplete?.();
+      }, 2000);
+      return () => clearTimeout(hide);
+    }
+
     // Animate in
     const scaleIn = setTimeout(() => setScale(1), 50);
 
@@ -188,20 +217,20 @@ export function LevelUpEffect({ level, onComplete }: LevelUpEffectProps) {
       clearTimeout(scaleOut);
       clearTimeout(hide);
     };
-  }, [onComplete]);
+  }, [onComplete, prefersReducedMotion]);
 
   if (!visible) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
       <div
-        className="text-center transition-all duration-500 ease-out"
+        className={`text-center ${prefersReducedMotion ? '' : 'transition-all duration-500 ease-out'}`}
         style={{
-          transform: `scale(${scale})`,
-          opacity: scale,
+          transform: prefersReducedMotion ? 'scale(1)' : `scale(${scale})`,
+          opacity: prefersReducedMotion ? 1 : scale,
         }}
       >
-        <div className="text-6xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent animate-pulse">
+        <div className={`text-6xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent ${prefersReducedMotion ? '' : 'animate-pulse'}`}>
           LEVEL UP!
         </div>
         <div className="text-4xl font-bold text-white mt-2">
