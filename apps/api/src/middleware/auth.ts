@@ -1,4 +1,5 @@
 import { Context, Next } from 'hono';
+import * as jose from 'jose';
 import type { Env } from '../types/env';
 
 export interface AuthUser {
@@ -7,7 +8,7 @@ export interface AuthUser {
   username: string;
 }
 
-// Simple token verification (in production, use proper JWT)
+// JWT verification middleware
 export async function authMiddleware(c: Context<Env>, next: Next) {
   const authHeader = c.req.header('Authorization');
 
@@ -25,26 +26,43 @@ export async function authMiddleware(c: Context<Env>, next: Next) {
   const token = authHeader.slice(7);
 
   try {
-    // In production, verify JWT here
-    // For now, we'll use a simple token that contains the user ID
-    const cached = await c.env.CACHE.get(`session:${token}`);
+    const secret = new TextEncoder().encode(c.env.JWT_SECRET);
+    const { payload } = await jose.jwtVerify(token, secret, {
+      issuer: c.env.JWT_ISSUER,
+    });
 
-    if (!cached) {
+    if (!payload.sub || !payload.email || !payload.username) {
       return c.json(
         {
           success: false,
           error: 'Unauthorized',
-          message: 'Invalid or expired token',
+          message: 'Invalid token payload',
         },
         401
       );
     }
 
-    const user = JSON.parse(cached) as AuthUser;
-    c.set('user', user);
+    const user: AuthUser = {
+      id: payload.sub,
+      email: payload.email as string,
+      username: payload.username as string,
+    };
 
+    c.set('user', user);
     await next();
   } catch (error) {
+    if (error instanceof jose.errors.JWTExpired) {
+      return c.json(
+        {
+          success: false,
+          error: 'Token expired',
+          message: 'Access token has expired. Please refresh.',
+          code: 'TOKEN_EXPIRED',
+        },
+        401
+      );
+    }
+
     return c.json(
       {
         success: false,
@@ -57,24 +75,28 @@ export async function authMiddleware(c: Context<Env>, next: Next) {
 }
 
 // Optional auth - continues even if not authenticated
-export async function optionalAuthMiddleware(
-  c: Context<Env>,
-  next: Next
-) {
+export async function optionalAuthMiddleware(c: Context<Env>, next: Next) {
   const authHeader = c.req.header('Authorization');
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.slice(7);
 
     try {
-      const cached = await c.env.CACHE.get(`session:${token}`);
+      const secret = new TextEncoder().encode(c.env.JWT_SECRET);
+      const { payload } = await jose.jwtVerify(token, secret, {
+        issuer: c.env.JWT_ISSUER,
+      });
 
-      if (cached) {
-        const user = JSON.parse(cached) as AuthUser;
+      if (payload.sub && payload.email && payload.username) {
+        const user: AuthUser = {
+          id: payload.sub,
+          email: payload.email as string,
+          username: payload.username as string,
+        };
         c.set('user', user);
       }
     } catch {
-      // Ignore errors for optional auth
+      // Ignore errors for optional auth - just don't set user
     }
   }
 

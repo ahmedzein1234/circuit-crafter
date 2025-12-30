@@ -15,7 +15,9 @@ export interface Bindings {
 
   // Environment variables
   ENVIRONMENT: string;
-  JWT_SECRET?: string;
+  JWT_SECRET: string;
+  JWT_ISSUER: string;
+  CORS_ORIGIN: string;
 
   // Index signature for Hono compatibility
   [key: string]: unknown;

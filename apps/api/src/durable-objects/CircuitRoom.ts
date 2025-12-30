@@ -73,9 +73,11 @@ export class CircuitRoom {
   }
 
   async handleWebSocket(request: Request): Promise<Response> {
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId') || 'anonymous';
-    const username = url.searchParams.get('username') || 'Anonymous';
+    // Get user info from headers (set by rooms router) or query params
+    const userId = request.headers.get('X-User-Id') ||
+                   new URL(request.url).searchParams.get('userId') || 'anonymous';
+    const username = request.headers.get('X-User-Name') ||
+                     new URL(request.url).searchParams.get('username') || 'Anonymous';
 
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);

@@ -34,6 +34,8 @@ import { TemplatesModal } from './components/TemplatesModal';
 import { WelcomeModal } from './components/WelcomeModal';
 import { ToastContainer } from './components/Toast';
 import { MobileCanvasHints } from './components/MobileCanvasHints';
+import { LearningPathsPanel } from './components/LearningPathsPanel';
+import { CertificateViewer } from './components/CertificateViewer';
 import { useCircuitsManagerStore } from './stores/circuitsManagerStore';
 
 function App() {
@@ -52,6 +54,8 @@ function App() {
   const [levelUpValue, setLevelUpValue] = useState(1);
   const [showAchievementGallery, setShowAchievementGallery] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showLearningPaths, setShowLearningPaths] = useState(false);
+  const [showCertificates, setShowCertificates] = useState(false);
 
   // Initialize onboarding keyboard shortcuts
   useOnboardingKeyboard();
@@ -70,6 +74,20 @@ function App() {
     window.addEventListener('xp-gained', handleXPGain as EventListener);
     return () => window.removeEventListener('xp-gained', handleXPGain as EventListener);
   }, [addXPNotification]);
+
+  // Listen for learning paths and certificates panel events
+  useEffect(() => {
+    const handleOpenLearningPaths = () => setShowLearningPaths(true);
+    const handleOpenCertificates = () => setShowCertificates(true);
+
+    window.addEventListener('open-learning-paths', handleOpenLearningPaths);
+    window.addEventListener('open-certificates', handleOpenCertificates);
+
+    return () => {
+      window.removeEventListener('open-learning-paths', handleOpenLearningPaths);
+      window.removeEventListener('open-certificates', handleOpenCertificates);
+    };
+  }, []);
 
   // Handle level up modal
   useEffect(() => {
@@ -342,6 +360,18 @@ function App() {
 
       {/* Mobile Canvas Hints */}
       <MobileCanvasHints />
+
+      {/* Learning Paths Panel */}
+      <LearningPathsPanel
+        isOpen={showLearningPaths}
+        onClose={() => setShowLearningPaths(false)}
+      />
+
+      {/* Certificate Viewer */}
+      <CertificateViewer
+        isOpen={showCertificates}
+        onClose={() => setShowCertificates(false)}
+      />
 
       {/* Achievement Gallery Button (floating) */}
       <button

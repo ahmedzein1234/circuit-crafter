@@ -3,6 +3,7 @@ import { useCircuitStore } from '../stores/circuitStore';
 import { formatSI } from '@circuit-crafter/shared';
 import { Oscilloscope } from './Oscilloscope';
 import { DailyChallengeCard } from './DailyChallengeCard';
+import { useLearningPathStore } from '../stores/learningPathStore';
 
 export function SimulationPanel() {
   const { simulationResult, components, isSimulating, runSimulation, showCurrentFlow, toggleCurrentFlow } = useCircuitStore();
@@ -108,6 +109,9 @@ export function SimulationPanel() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
         {/* Daily Challenge Card */}
         <DailyChallengeCard />
+
+        {/* Learning Paths Quick Card */}
+        <LearningPathsQuickCard />
 
         {/* Status */}
         {simulationResult && (
@@ -330,6 +334,98 @@ export function SimulationPanel() {
 
       {/* Oscilloscope Modal */}
       {showOscilloscope && <Oscilloscope onClose={() => setShowOscilloscope(false)} />}
+    </div>
+  );
+}
+
+// Quick card component for Learning Paths
+function LearningPathsQuickCard() {
+  const {
+    totalPathsStarted,
+    totalPathsCompleted,
+    earnedCertificates,
+    totalLearningMinutes,
+    gradeLevel,
+    studentName,
+  } = useLearningPathStore();
+
+  // Dispatch event to open learning paths panel
+  const handleOpenPaths = () => {
+    window.dispatchEvent(new CustomEvent('open-learning-paths'));
+  };
+
+  // Dispatch event to open certificates
+  const handleOpenCertificates = () => {
+    window.dispatchEvent(new CustomEvent('open-certificates'));
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-4 border border-blue-500/20">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">📚</span>
+          <h3 className="font-bold text-white text-sm">Learning Paths</h3>
+        </div>
+        {studentName && (
+          <span className="text-xs bg-blue-600/30 text-blue-300 px-2 py-1 rounded-full">
+            {gradeLevel}
+          </span>
+        )}
+      </div>
+
+      <p className="text-gray-400 text-xs mb-3">
+        Curriculum-aligned lessons for school students
+      </p>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="bg-gray-800/50 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-white">{totalPathsStarted}</div>
+          <div className="text-[10px] text-gray-500">Started</div>
+        </div>
+        <div className="bg-gray-800/50 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-green-400">{totalPathsCompleted}</div>
+          <div className="text-[10px] text-gray-500">Completed</div>
+        </div>
+        <div className="bg-gray-800/50 rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-yellow-400">{earnedCertificates.length}</div>
+          <div className="text-[10px] text-gray-500">Certificates</div>
+        </div>
+      </div>
+
+      {/* Time spent */}
+      {totalLearningMinutes > 0 && (
+        <div className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+          <span>⏱️</span>
+          <span>{Math.round(totalLearningMinutes)} minutes learned</span>
+        </div>
+      )}
+
+      {/* Standards badges */}
+      <div className="flex flex-wrap gap-1 mb-3">
+        <span className="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded">NGSS</span>
+        <span className="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded">UK National Curriculum</span>
+        <span className="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded">Common Core Math</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <button
+          onClick={handleOpenPaths}
+          className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+        >
+          Browse Paths
+        </button>
+        {earnedCertificates.length > 0 && (
+          <button
+            onClick={handleOpenCertificates}
+            className="px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
+          >
+            <span>🏆</span>
+            <span>{earnedCertificates.length}</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }

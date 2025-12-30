@@ -9,6 +9,7 @@ export * from './types/simulation';
 export * from './types/user';
 export * from './types/api';
 export * from './types/tutorial';
+export * from './types/curriculum';
 
 // Utilities
 export * from './utils/helpers';
@@ -19,3 +20,6 @@ export * from './data/componentEducation';
 
 // Tutorial Data
 export * from './data/tutorialData';
+
+// Learning Paths Data
+export * from './data/learningPaths';
