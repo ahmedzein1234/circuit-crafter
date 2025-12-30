@@ -488,13 +488,9 @@ export function initializeDailyChallenge() {
   const store = useDailyChallengeStore.getState();
   store.generateDailyChallenge();
 
-  // Check if we should show the reward modal
-  const today = getTodayString();
-  if (!store.hasSeenTodayModal && store.progress.lastClaimDate !== today) {
-    setTimeout(() => {
-      useDailyChallengeStore.setState({ showRewardModal: true });
-    }, 1000); // Show after 1 second
-  }
+  // Note: No longer auto-showing the reward modal on startup
+  // Users can access daily rewards via the Achievement Gallery button
+  // This reduces popup spam that confuses new users
 }
 
 // Export utility to get time until reset

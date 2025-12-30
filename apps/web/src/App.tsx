@@ -19,7 +19,6 @@ import {
 import { ShareCircuitModal, LeaderboardPanel, UserProfileCard } from './components/social';
 import { useCircuitStore } from './stores/circuitStore';
 import { useThemeStore } from './stores/themeStore';
-import { useOnboardingStore } from './stores/onboardingStore';
 import { initializeDailyChallenge } from './stores/dailyChallengeStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { useGamificationStore } from './stores/gamificationStore';
@@ -37,7 +36,7 @@ import { useCircuitsManagerStore } from './stores/circuitsManagerStore';
 function App() {
   const { runSimulation, undo, redo } = useCircuitStore();
   const theme = useThemeStore((state) => state.theme);
-  const { isOnboardingComplete, isOnboardingActive, startOnboarding } = useOnboardingStore();
+  // Note: onboarding auto-start disabled - keeping store for manual restart if needed
   const { isInTutorialMode } = useTutorialStore();
   const { pendingLevelUp, clearPendingLevelUp } = useGamificationStore();
   const addXPNotification = useXPNotificationStore((state) => state.addNotification);
@@ -78,15 +77,9 @@ function App() {
     }
   }, [pendingLevelUp, clearPendingLevelUp]);
 
-  // Start onboarding for first-time users
-  useEffect(() => {
-    if (!isOnboardingComplete && !isOnboardingActive) {
-      const timer = setTimeout(() => {
-        startOnboarding();
-      }, 500); // Small delay to let the UI render first
-      return () => clearTimeout(timer);
-    }
-  }, [isOnboardingComplete, isOnboardingActive, startOnboarding]);
+  // Note: Auto-onboarding disabled to reduce popup spam on startup
+  // Users can explore on their own - the connection tip helps with wire drawing
+  // Onboarding can be manually started via the help/settings menu if needed
 
   // Handler for help button to show keyboard shortcuts
   const handleHelpClick = () => {

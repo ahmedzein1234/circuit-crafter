@@ -10,10 +10,14 @@ export function ProblemsPanel() {
     return null;
   }
 
-  const { warnings, hasShortCircuit, hasOpenCircuit } = simulationResult;
+  const { warnings, hasShortCircuit } = simulationResult;
 
-  // Don't show panel if no problems
-  if (warnings.length === 0 && !hasShortCircuit && !hasOpenCircuit) {
+  // Only show errors (serious problems like short circuits, overloads)
+  // Don't show for info/warning tips - those appear in the SimulationPanel
+  const errorWarnings = warnings.filter(w => w.severity === 'error');
+
+  // Only show this panel for actual errors, not building tips
+  if (errorWarnings.length === 0 && !hasShortCircuit) {
     return null;
   }
 
@@ -66,17 +70,17 @@ export function ProblemsPanel() {
           {/* Header */}
           <div className="bg-gradient-to-r from-yellow-600 to-orange-600 px-4 py-3 flex items-center gap-3">
             <span className="text-2xl animate-pulse" role="img" aria-label="alert">
-              🔧
+              ⚡
             </span>
-            <h3 className="text-white font-bold text-lg">Oops! Let's Fix This!</h3>
+            <h3 className="text-white font-bold text-lg">Circuit Alert!</h3>
             <span className="ml-auto bg-white text-orange-600 px-2 py-1 rounded-full text-sm font-bold">
-              {warnings.length}
+              {errorWarnings.length}
             </span>
           </div>
 
           {/* Problems list */}
           <div className="max-h-96 overflow-y-auto p-4 space-y-3 no-scrollbar">
-          {warnings.map((warning, index) => (
+          {errorWarnings.map((warning, index) => (
             <div
               key={index}
               className={`border rounded-lg p-4 cursor-pointer transition-all hover:scale-[1.02] ${getSeverityColor(
@@ -157,13 +161,13 @@ export function ProblemsPanel() {
             className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 px-4 py-3 flex items-center gap-3 touch-manipulation active:opacity-80"
           >
             <span className="text-xl animate-pulse" role="img" aria-label="alert">
-              🔧
+              ⚡
             </span>
             <h3 className="text-white font-bold text-mobile-base flex-1 text-left">
-              {isExpanded ? 'Problems Found!' : `${warnings.length} Problem${warnings.length !== 1 ? 's' : ''}`}
+              {isExpanded ? 'Circuit Alert!' : `${errorWarnings.length} Alert${errorWarnings.length !== 1 ? 's' : ''}`}
             </h3>
             <span className="bg-white text-orange-600 px-2 py-1 rounded-full text-mobile-xs font-bold">
-              {warnings.length}
+              {errorWarnings.length}
             </span>
             <svg
               className={`w-5 h-5 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -178,7 +182,7 @@ export function ProblemsPanel() {
           {/* Problems list - collapsible */}
           {isExpanded && (
             <div className="max-h-[40vh] overflow-y-auto p-3 space-y-2 no-scrollbar">
-              {warnings.map((warning, index) => (
+              {errorWarnings.map((warning, index) => (
                 <div
                   key={index}
                   className={`border rounded-lg p-3 active:scale-[0.98] transition-all touch-manipulation ${getSeverityColor(
