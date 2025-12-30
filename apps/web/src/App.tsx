@@ -33,6 +33,7 @@ import { MyCircuitsPanel } from './components/MyCircuitsPanel';
 import { TemplatesModal } from './components/TemplatesModal';
 import { WelcomeModal } from './components/WelcomeModal';
 import { ToastContainer } from './components/Toast';
+import { MobileCanvasHints } from './components/MobileCanvasHints';
 import { useCircuitsManagerStore } from './stores/circuitsManagerStore';
 
 function App() {
@@ -338,6 +339,9 @@ function App() {
 
       {/* Toast Notifications */}
       <ToastContainer />
+
+      {/* Mobile Canvas Hints */}
+      <MobileCanvasHints />
 
       {/* Achievement Gallery Button (floating) */}
       <button

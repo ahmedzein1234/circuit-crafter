@@ -20,7 +20,48 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
 
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const modKey = isMac ? 'Cmd' : 'Ctrl';
+  const isMobile = window.innerWidth < 768;
 
+  // Touch gestures for mobile
+  const touchCategories: ShortcutCategory[] = [
+    {
+      title: 'Touch Gestures',
+      shortcuts: [
+        { keys: ['Tap'], description: 'Select component or terminal' },
+        { keys: ['Double Tap'], description: 'Delete wire or toggle switch' },
+        { keys: ['Long Press'], description: 'Show context menu' },
+        { keys: ['Drag'], description: 'Move component' },
+      ],
+    },
+    {
+      title: 'Navigation',
+      shortcuts: [
+        { keys: ['Pinch'], description: 'Zoom in/out' },
+        { keys: ['Two Finger Drag'], description: 'Pan the canvas' },
+        { keys: ['+ / - Buttons'], description: 'Zoom controls' },
+        { keys: ['1:1 Button'], description: 'Reset zoom' },
+      ],
+    },
+    {
+      title: 'Building Circuits',
+      shortcuts: [
+        { keys: ['Tap Terminal'], description: 'Start wire connection' },
+        { keys: ['Tap 2nd Terminal'], description: 'Complete wire' },
+        { keys: ['Tap Switch'], description: 'Toggle switch on/off' },
+        { keys: ['Drag from Palette'], description: 'Add component' },
+      ],
+    },
+    {
+      title: 'Editing',
+      shortcuts: [
+        { keys: ['Select + Rotate'], description: 'Rotate component (toolbar)' },
+        { keys: ['Select + Delete'], description: 'Delete component (toolbar)' },
+        { keys: ['Undo / Redo'], description: 'Use toolbar buttons' },
+      ],
+    },
+  ];
+
+  // Keyboard shortcuts for desktop
   const categories: ShortcutCategory[] = [
     {
       title: 'File',
@@ -73,6 +114,8 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
     },
   ];
 
+  const displayCategories = isMobile ? touchCategories : categories;
+
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -122,7 +165,9 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
               </svg>
             </div>
             <div>
-              <h2 id="shortcuts-title" className="text-xl font-bold text-white">Keyboard Shortcuts</h2>
+              <h2 id="shortcuts-title" className="text-xl font-bold text-white">
+                {isMobile ? 'Touch Controls' : 'Keyboard Shortcuts'}
+              </h2>
               <p className="text-xs text-gray-400">Quick reference guide</p>
             </div>
           </div>
@@ -144,7 +189,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {categories.map((category) => (
+          {displayCategories.map((category) => (
             <div key={category.title}>
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
                 {category.title}
@@ -178,7 +223,9 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-700 bg-gray-800/50">
           <p className="text-xs text-gray-400 text-center">
-            Press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-white bg-gray-900 border border-gray-700 rounded">Esc</kbd> or click outside to close
+            {isMobile ? 'Tap outside to close' : (
+              <>Press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-white bg-gray-900 border border-gray-700 rounded">Esc</kbd> or click outside to close</>
+            )}
           </p>
         </div>
       </div>
