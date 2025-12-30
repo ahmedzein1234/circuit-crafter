@@ -31,6 +31,7 @@ import { AchievementGallery } from './components/AchievementGallery';
 import { SaveCircuitModal } from './components/SaveCircuitModal';
 import { MyCircuitsPanel } from './components/MyCircuitsPanel';
 import { TemplatesModal } from './components/TemplatesModal';
+import { WelcomeModal } from './components/WelcomeModal';
 import { useCircuitsManagerStore } from './stores/circuitsManagerStore';
 
 function App() {
@@ -330,6 +331,9 @@ function App() {
         isOpen={showTemplatesModal}
         onClose={() => setShowTemplatesModal(false)}
       />
+
+      {/* Welcome Modal - shown on first load */}
+      <WelcomeModal onTemplatesClick={() => setShowTemplatesModal(true)} />
 
       {/* Achievement Gallery Button (floating) */}
       <button
