@@ -5,6 +5,166 @@ import type { ComponentType } from '@circuit-crafter/shared';
 import { FormulaCalculator } from './FormulaCalculator';
 import type { FormulaType } from '../types/formulas';
 
+// Property editor for different component types
+function PropertyEditor({ componentId, componentType, properties }: {
+  componentId: string;
+  componentType: ComponentType;
+  properties: Record<string, unknown>;
+}) {
+  const { updateComponentProperty, toggleSwitch } = useCircuitStore();
+
+  const renderPropertyInput = (label: string, property: string, value: unknown, unit: string, min?: number, max?: number, step?: number) => {
+    const numValue = typeof value === 'number' ? value : 0;
+
+    return (
+      <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-700 last:border-0">
+        <label className="text-sm text-slate-300 flex-shrink-0">{label}</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            value={numValue}
+            min={min}
+            max={max}
+            step={step || 1}
+            onChange={(e) => updateComponentProperty(componentId, property, parseFloat(e.target.value) || 0)}
+            className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <span className="text-xs text-slate-400 w-8">{unit}</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSelectInput = (label: string, property: string, value: unknown, options: { value: string; label: string }[]) => {
+    return (
+      <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-700 last:border-0">
+        <label className="text-sm text-slate-300 flex-shrink-0">{label}</label>
+        <select
+          value={String(value || options[0]?.value)}
+          onChange={(e) => updateComponentProperty(componentId, property, e.target.value)}
+          className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {options.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
+  const renderToggle = (label: string, isOn: boolean) => {
+    return (
+      <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-700 last:border-0">
+        <label className="text-sm text-slate-300 flex-shrink-0">{label}</label>
+        <button
+          onClick={() => toggleSwitch(componentId)}
+          className={`w-14 h-7 rounded-full transition-colors relative ${isOn ? 'bg-green-600' : 'bg-slate-600'}`}
+        >
+          <span className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow ${isOn ? 'left-8' : 'left-1'}`} />
+        </button>
+      </div>
+    );
+  };
+
+  switch (componentType) {
+    case 'battery':
+      return (
+        <div className="space-y-1">
+          {renderPropertyInput('Voltage', 'voltage', properties.voltage, 'V', 0.1, 24, 0.1)}
+        </div>
+      );
+
+    case 'resistor':
+      return (
+        <div className="space-y-1">
+          {renderPropertyInput('Resistance', 'resistance', properties.resistance, 'Ω', 1, 10000000, 1)}
+        </div>
+      );
+
+    case 'led':
+      return (
+        <div className="space-y-1">
+          {renderSelectInput('Color', 'color', properties.color, [
+            { value: 'red', label: 'Red' },
+            { value: 'green', label: 'Green' },
+            { value: 'blue', label: 'Blue' },
+            { value: 'yellow', label: 'Yellow' },
+            { value: 'white', label: 'White' },
+          ])}
+          {renderPropertyInput('Forward Voltage', 'forwardVoltage', properties.forwardVoltage, 'V', 1.5, 4, 0.1)}
+          {renderPropertyInput('Max Current', 'maxCurrent', properties.maxCurrent, 'A', 0.001, 0.1, 0.001)}
+        </div>
+      );
+
+    case 'capacitor':
+      return (
+        <div className="space-y-1">
+          {renderPropertyInput('Capacitance', 'capacitance', properties.capacitance, 'µF', 0.001, 10000, 0.001)}
+          {renderPropertyInput('Max Voltage', 'maxVoltage', properties.maxVoltage, 'V', 1, 100, 1)}
+        </div>
+      );
+
+    case 'switch':
+      return (
+        <div className="space-y-1">
+          {renderToggle('Switch State', properties.isOpen === false)}
+        </div>
+      );
+
+    case 'potentiometer':
+      return (
+        <div className="space-y-1">
+          {renderPropertyInput('Max Resistance', 'maxResistance', properties.maxResistance, 'Ω', 100, 1000000, 100)}
+          <div className="flex items-center justify-between gap-3 py-2">
+            <label className="text-sm text-slate-300 flex-shrink-0">Position</label>
+            <div className="flex items-center gap-2 flex-1">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={typeof properties.position === 'number' ? properties.position : 0.5}
+                onChange={(e) => updateComponentProperty(componentId, 'position', parseFloat(e.target.value))}
+                className="flex-1"
+              />
+              <span className="text-xs text-slate-400 w-10">{Math.round((typeof properties.position === 'number' ? properties.position : 0.5) * 100)}%</span>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'fuse':
+      return (
+        <div className="space-y-1">
+          {renderPropertyInput('Rating', 'rating', properties.rating, 'A', 0.1, 30, 0.1)}
+        </div>
+      );
+
+    case 'motor':
+      return (
+        <div className="space-y-1">
+          {renderPropertyInput('Voltage', 'voltage', properties.voltage, 'V', 1, 24, 1)}
+          {renderPropertyInput('Current', 'current', properties.current, 'A', 0.1, 5, 0.1)}
+        </div>
+      );
+
+    case 'buzzer':
+      return (
+        <div className="space-y-1">
+          {renderPropertyInput('Voltage', 'voltage', properties.voltage, 'V', 1, 24, 1)}
+          {renderPropertyInput('Frequency', 'frequency', properties.frequency, 'Hz', 100, 10000, 100)}
+        </div>
+      );
+
+    default:
+      return (
+        <div className="text-slate-400 text-sm text-center py-4">
+          No editable properties for this component
+        </div>
+      );
+  }
+}
+
 interface ComponentInfoPanelProps {
   componentType?: ComponentType;
   onClose?: () => void;
@@ -12,7 +172,7 @@ interface ComponentInfoPanelProps {
 
 export function ComponentInfoPanel({ componentType, onClose }: ComponentInfoPanelProps) {
   const { components, selectedComponentId } = useCircuitStore();
-  const [activeTab, setActiveTab] = useState<'info' | 'calculator'>('info');
+  const [activeTab, setActiveTab] = useState<'properties' | 'info' | 'calculator'>('properties');
   const [calculatorTab, setCalculatorTab] = useState<FormulaType>('ohms_law');
 
   // Get component type from selection if not provided
@@ -131,6 +291,21 @@ export function ComponentInfoPanel({ componentType, onClose }: ComponentInfoPane
 
       {/* Tab Navigation */}
       <div className="bg-slate-750 px-4 py-2 flex gap-2 border-b border-slate-600">
+        {selectedComponent && (
+          <button
+            onClick={() => setActiveTab('properties')}
+            className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === 'properties'
+                ? 'bg-green-600 text-white'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            <span role="img" aria-label="properties">
+              🔧
+            </span>
+            Properties
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('info')}
           className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
@@ -160,6 +335,26 @@ export function ComponentInfoPanel({ componentType, onClose }: ComponentInfoPane
       </div>
 
       {/* Content */}
+      {/* Properties Tab */}
+      {activeTab === 'properties' && selectedComponent && (
+        <div className="p-4">
+          <div className="mb-3 pb-3 border-b border-slate-700">
+            <h4 className="text-sm font-semibold text-slate-400 uppercase flex items-center gap-2">
+              <span role="img" aria-label="settings">⚙️</span>
+              Edit Properties
+            </h4>
+            <p className="text-xs text-slate-500 mt-1">
+              Change the values below and the simulation will update automatically
+            </p>
+          </div>
+          <PropertyEditor
+            componentId={selectedComponent.id}
+            componentType={selectedComponent.type}
+            properties={selectedComponent.properties as Record<string, unknown>}
+          />
+        </div>
+      )}
+
       {activeTab === 'info' && (
         <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto">
         {/* Description */}

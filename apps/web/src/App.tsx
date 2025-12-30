@@ -32,6 +32,7 @@ import { SaveCircuitModal } from './components/SaveCircuitModal';
 import { MyCircuitsPanel } from './components/MyCircuitsPanel';
 import { TemplatesModal } from './components/TemplatesModal';
 import { WelcomeModal } from './components/WelcomeModal';
+import { ToastContainer } from './components/Toast';
 import { useCircuitsManagerStore } from './stores/circuitsManagerStore';
 
 function App() {
@@ -334,6 +335,9 @@ function App() {
 
       {/* Welcome Modal - shown on first load */}
       <WelcomeModal onTemplatesClick={() => setShowTemplatesModal(true)} />
+
+      {/* Toast Notifications */}
+      <ToastContainer />
 
       {/* Achievement Gallery Button (floating) */}
       <button

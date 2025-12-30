@@ -7,6 +7,7 @@ import { useSocialStore } from '../stores/socialStore';
 import { useCircuitsManagerStore } from '../stores/circuitsManagerStore';
 import { useCanvasStore } from '../stores/canvasStore';
 import { exportCircuitAsImage } from '../utils/exportCircuit';
+import { toast } from './Toast';
 
 interface ToolbarProps {
   onHelpClick: () => void;
@@ -49,7 +50,10 @@ export function Toolbar({ onHelpClick, onTemplatesClick }: ToolbarProps) {
   const [exportSuccess, setExportSuccess] = useState(false);
 
   const handleExport = async () => {
-    if (!stageRef || components.length === 0) return;
+    if (!stageRef || components.length === 0) {
+      toast.warning('Add some components before exporting');
+      return;
+    }
 
     setIsExporting(true);
     try {
@@ -57,9 +61,10 @@ export function Toolbar({ onHelpClick, onTemplatesClick }: ToolbarProps) {
         filename: currentCircuitName || 'my-circuit',
       });
       setExportSuccess(true);
+      toast.success('Circuit exported as image!');
       setTimeout(() => setExportSuccess(false), 2000);
     } catch (error) {
-      console.error('Export failed:', error);
+      toast.error('Export failed. Please try again.');
     } finally {
       setIsExporting(false);
     }

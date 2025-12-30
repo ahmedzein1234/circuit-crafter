@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { circuitsApi, type Circuit, type CircuitBlueprint } from '../api';
 import type { CircuitComponent, Wire } from '@circuit-crafter/shared';
+import { toast } from '../components/Toast';
 
 // Local storage key for guest circuits
 const LOCAL_STORAGE_KEY = 'circuit-crafter-local-circuits';
@@ -138,6 +139,8 @@ export const useCircuitsManagerStore = create<CircuitsManagerState>((set, get) =
           hasUnsavedChanges: false,
         });
 
+        toast.success(`Circuit "${name}" saved successfully!`);
+
         // Refresh circuits list
         get().fetchMyCircuits(true);
         return true;
@@ -171,6 +174,8 @@ export const useCircuitsManagerStore = create<CircuitsManagerState>((set, get) =
       currentCircuitName: name,
       hasUnsavedChanges: false,
     });
+
+    toast.success(`Circuit "${name}" saved locally!`);
 
     return true;
   },

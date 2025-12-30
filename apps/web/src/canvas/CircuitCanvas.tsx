@@ -512,6 +512,13 @@ export function CircuitCanvas() {
         >
           -
         </button>
+        {/* Zoom level indicator */}
+        <div
+          className="w-14 h-8 md:w-11 md:h-7 rounded-lg bg-gray-900/80 backdrop-blur flex items-center justify-center text-xs font-mono text-gray-300 shadow-lg"
+          title={`Current zoom: ${Math.round(canvasScale * 100)}%`}
+        >
+          {Math.round(canvasScale * 100)}%
+        </div>
         <button
           className="w-14 h-14 md:w-11 md:h-11 rounded-xl md:rounded-lg bg-gray-800/90 dark:bg-gray-800/90 light:bg-white/90 backdrop-blur text-white dark:text-white light:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-700 light:hover:bg-gray-100 hover:shadow-lg hover:shadow-blue-500/50 flex items-center justify-center text-sm md:text-xs font-medium transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg touch-manipulation"
           onClick={() => {
