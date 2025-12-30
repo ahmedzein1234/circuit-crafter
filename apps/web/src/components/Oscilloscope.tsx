@@ -246,7 +246,10 @@ export function Oscilloscope({ onClose }: OscilloscopeProps) {
       <div className="bg-gray-900 rounded-lg shadow-xl border border-gray-700 max-w-5xl w-full mx-4">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 id="oscilloscope-title" className="text-lg font-semibold text-white">Oscilloscope</h2>
+          <div>
+            <h2 id="oscilloscope-title" className="text-lg font-semibold text-white">Oscilloscope</h2>
+            <p className="text-xs text-gray-400">Visualize voltage changes over time</p>
+          </div>
           <button
             onClick={onClose}
             className="min-w-11 min-h-11 text-gray-400 hover:text-white transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -256,6 +259,28 @@ export function Oscilloscope({ onClose }: OscilloscopeProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
+
+        {/* Info banner */}
+        <div className="bg-blue-900/30 border-b border-blue-800/50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-blue-600/30 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="text-sm">
+              <p className="text-blue-300 font-medium">How to use the oscilloscope:</p>
+              <ol className="text-blue-200/70 text-xs mt-1 space-y-1 list-decimal list-inside">
+                <li>Select a component to monitor from Channel 1 or 2</li>
+                <li>Click "Run Transient Analysis" to simulate over time</li>
+                <li>Adjust timebase and voltage scale to see the waveform</li>
+              </ol>
+              <p className="text-blue-200/50 text-xs mt-2 italic">
+                Best for: Capacitor charging, switch transitions, and time-varying signals
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Main content */}

@@ -59,16 +59,21 @@ export function SimulationPanel() {
             {isSimulating ? 'Running...' : 'Run'}
           </button>
         </div>
-        <button
-          onClick={() => setShowOscilloscope(true)}
-          className="w-full px-3 py-2 min-h-touch-target md:min-h-11 text-mobile-xs md:text-xs font-medium bg-purple-600 hover:bg-purple-700 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          aria-label="Open oscilloscope"
-        >
-          <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <span className="hidden md:inline">Oscilloscope</span>
-        </button>
+        <div className="space-y-1">
+          <button
+            onClick={() => setShowOscilloscope(true)}
+            className="w-full px-3 py-2 min-h-touch-target md:min-h-11 text-mobile-xs md:text-xs font-medium bg-purple-600 hover:bg-purple-700 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            aria-label="Open oscilloscope - view voltage over time"
+          >
+            <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span className="hidden md:inline">Oscilloscope</span>
+          </button>
+          <p className="text-[10px] text-gray-500 text-center hidden md:block">
+            View voltage changes over time
+          </p>
+        </div>
 
         {/* Show Current Flow Toggle */}
         <div className="mt-3 flex items-center justify-between">
