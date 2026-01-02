@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi, type User, type UserProfile } from '../api';
+import { syncGamificationOnLogin } from './gamificationStore';
 
 interface AuthState {
   // State
@@ -55,6 +56,9 @@ export const useAuthStore = create<AuthState>()(
           // Load full profile
           get().loadProfile();
 
+          // Sync gamification data from backend
+          syncGamificationOnLogin();
+
           return true;
         } else {
           set({
@@ -84,6 +88,9 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+
+          // Sync gamification data from backend (for new users, initializes progress)
+          syncGamificationOnLogin();
 
           return true;
         } else {

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ComponentType } from '@circuit-crafter/shared';
+import { progressApi } from '../api';
 
 // Achievement definitions
 export interface Achievement {
@@ -182,6 +183,10 @@ interface GamificationState {
   // Level up tracking
   pendingLevelUp: number | null;
 
+  // Sync state
+  isSyncing: boolean;
+  lastSyncedAt: string | null;
+
   // Actions
   addXP: (amount: number, reason: string) => void;
   clearPendingLevelUp: () => void;
@@ -195,6 +200,11 @@ interface GamificationState {
   recordResistanceUsed: (value: number) => void;
   updateStreak: () => void;
   dismissRecentAchievement: () => void;
+
+  // Sync actions
+  syncToBackend: () => Promise<void>;
+  loadFromBackend: () => Promise<void>;
+  syncAchievementToBackend: (achievementId: string) => Promise<void>;
 }
 
 export const useGamificationStore = create<GamificationState>()(
@@ -226,6 +236,10 @@ export const useGamificationStore = create<GamificationState>()(
 
       // Level up tracking
       pendingLevelUp: null as number | null,
+
+      // Sync state
+      isSyncing: false,
+      lastSyncedAt: null,
 
       // Actions
       addXP: (amount, reason) => {
@@ -323,6 +337,11 @@ export const useGamificationStore = create<GamificationState>()(
           // Add XP from achievements
           if (totalXPGained > 0) {
             get().addXP(totalXPGained, 'Achievement unlocked');
+          }
+
+          // Sync new achievements to backend
+          for (const achievement of newlyUnlocked) {
+            get().syncAchievementToBackend(achievement.id);
           }
         }
       },
@@ -455,6 +474,96 @@ export const useGamificationStore = create<GamificationState>()(
       dismissRecentAchievement: () => {
         set({ recentAchievement: null });
       },
+
+      // Sync to backend
+      syncToBackend: async () => {
+        const state = get();
+        if (state.isSyncing) return;
+
+        // Check if user is authenticated
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+
+        set({ isSyncing: true });
+
+        try {
+          await progressApi.updateProgress({
+            xp: state.totalXP,
+            level: state.level,
+            totalCircuitsCreated: state.stats.circuitsCompleted,
+            totalChallengesCompleted: state.stats.challengesCompleted,
+            totalWiresConnected: state.stats.wiresPlaced,
+          });
+
+          set({ lastSyncedAt: new Date().toISOString() });
+        } catch (error) {
+          console.error('Failed to sync progress to backend:', error);
+        } finally {
+          set({ isSyncing: false });
+        }
+      },
+
+      // Load from backend
+      loadFromBackend: async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+
+        set({ isSyncing: true });
+
+        try {
+          // Load progress
+          const progressResponse = await progressApi.getProgress();
+          if (progressResponse.success && progressResponse.data) {
+            const data = progressResponse.data;
+
+            // Merge with local state (take higher values)
+            const currentState = get();
+            const mergedXP = Math.max(currentState.totalXP, data.xp);
+            const mergedLevelInfo = getLevelFromXP(mergedXP);
+
+            set({
+              totalXP: mergedXP,
+              level: mergedLevelInfo.level,
+              currentLevelXP: mergedLevelInfo.currentXP,
+              xpForNextLevel: mergedLevelInfo.xpForNextLevel,
+              currentStreak: Math.max(currentState.currentStreak, data.currentStreak),
+              stats: {
+                ...currentState.stats,
+                circuitsCompleted: Math.max(currentState.stats.circuitsCompleted, data.totalCircuitsCreated),
+                challengesCompleted: Math.max(currentState.stats.challengesCompleted, data.totalChallengesCompleted),
+                wiresPlaced: Math.max(currentState.stats.wiresPlaced, data.totalWiresConnected),
+              },
+            });
+          }
+
+          // Load achievements
+          const achievementsResponse = await progressApi.getAchievements();
+          if (achievementsResponse.success && achievementsResponse.data) {
+            const backendAchievements = achievementsResponse.data.map(a => a.achievementId);
+            const currentAchievements = get().unlockedAchievements;
+            const merged = [...new Set([...currentAchievements, ...backendAchievements])];
+            set({ unlockedAchievements: merged });
+          }
+
+          set({ lastSyncedAt: new Date().toISOString() });
+        } catch (error) {
+          console.error('Failed to load progress from backend:', error);
+        } finally {
+          set({ isSyncing: false });
+        }
+      },
+
+      // Sync achievement to backend
+      syncAchievementToBackend: async (achievementId: string) => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+
+        try {
+          await progressApi.unlockAchievement(achievementId, 100);
+        } catch (error) {
+          console.error('Failed to sync achievement to backend:', error);
+        }
+      },
     }),
     {
       name: 'circuit-crafter-gamification',
@@ -484,3 +593,24 @@ export const useGamificationStore = create<GamificationState>()(
     }
   )
 );
+
+// Debounced sync to backend on XP changes
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+
+useGamificationStore.subscribe((state, prevState) => {
+  // Only sync if XP changed and user is authenticated
+  if (state.totalXP !== prevState.totalXP && localStorage.getItem('auth_token')) {
+    // Debounce: wait 5 seconds after last XP change before syncing
+    if (syncTimeout) {
+      clearTimeout(syncTimeout);
+    }
+    syncTimeout = setTimeout(() => {
+      useGamificationStore.getState().syncToBackend();
+    }, 5000);
+  }
+});
+
+// Export helper to sync on login
+export const syncGamificationOnLogin = async () => {
+  await useGamificationStore.getState().loadFromBackend();
+};
